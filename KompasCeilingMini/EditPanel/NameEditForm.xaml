@@ -1,0 +1,28 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KompasCeilingMini.EditPanel"
+        xmlns:Properties="clr-namespace:KompasCeilingMini.Properties" x:Class="KompasCeilingMini.EditPanel.NameEditForm"
+        mc:Ignorable="d"
+        Title="NameEditForm" Height="240.647" Width="832.374">
+    <Grid>
+        <TextBox x:Name="textBox" Height="43" Margin="10,10,10,0" TextWrapping="Wrap" Text="{Binding NameFileText}" VerticalAlignment="Top" FontSize="16" Drop="TextBox_Drop" DragEnter="TextBox_DragEnter" TextChanged="textBox_TextChanged">
+            <TextBox.DataContext>
+                <Properties:Settings/>
+            </TextBox.DataContext>
+        </TextBox>
+        <ListView x:Name="MyList" Margin="10,66,10,50" ScrollViewer.HorizontalScrollBarVisibility="Disabled" PreviewMouseDown="MyList_PreviewMouseDown">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="5" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+        </ListView>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="22" Margin="633,368,0,-180" Stroke="Black" VerticalAlignment="Top" Width="4"/>
+        <Button x:Name="saveBtn" Content="Сохранить" Margin="0,0,10,10" HorizontalAlignment="Right" Width="112" Click="SaveBtn_Click" Height="35" VerticalAlignment="Bottom"/>
+        <Label x:Name="ExampleLabel" Content="Пример" HorizontalAlignment="Left" Margin="10,165,0,0" VerticalAlignment="Top" Width="687"/>
+
+    </Grid>
+</Window>

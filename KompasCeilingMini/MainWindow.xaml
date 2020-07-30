@@ -3,18 +3,52 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:KompasCeilingMini"
-        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" xmlns:controlzex="urn:controlzex" xmlns:Properties="clr-namespace:KompasCeilingMini.Properties" x:Name="KsContrForm" x:Class="KompasCeilingMini.MainWindow"
+    
+                      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+     
+     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:Properties="clr-namespace:KompasCeilingMini.Properties" x:Name="MainFrame" x:Class="KompasCeilingMini.MainWindow"
         mc:Ignorable="d"
-        Title="KompasCeilingMini" Height="592" Width="280" ScrollViewer.VerticalScrollBarVisibility="Disabled" ResizeMode="NoResize" Topmost="True" Closing="KsContrForm_Closing" Loaded="KsContrForm_Loaded" Closed="KsContrForm_Closed" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="256" MinHeight="560" Activated="KsContrForm_Activated" Deactivated="KsContrForm_Deactivated" AllowsTransparency="True" WindowStyle="None" BorderBrush="#FF6A6A6A">
+        Title="KompasCeilingMini"  Height="625" Width="330" ScrollViewer.VerticalScrollBarVisibility="Disabled" 
+    ResizeMode="NoResize" Topmost="True" AllowsTransparency="True" Closing="KsContrForm_Closing" Loaded="KsContrForm_Loaded" 
+    Closed="KsContrForm_Closed" HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="256" 
+    MinHeight="560" Activated="KsContrForm_Activated" Deactivated="KsContrForm_Deactivated" 
+    WindowStyle="None"  BorderBrush="#FF6A6A6A" Icon="M_logo_v-05.png" Foreground="{x:Null}" MaxWidth="330" MaxHeight="625">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Colors.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Accents/BaseLight.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.AnimatedTabControl.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <GridLength x:Key="wColum1">120</GridLength>
+            <SolidColorBrush x:Key="ThemeBrush" Color="{DynamicResource BackgroundColor}"/>
+            <Color x:Key="BackgroundColor">YellowGreen</Color>
+            <sys:String x:Key="StatLabel" >Статус</sys:String>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Border BorderBrush="#FF979797" BorderThickness="1,1,1,1">
         <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="24*"/>
+                <ColumnDefinition Width="115*"/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="257*"/>
-                <RowDefinition Height="22*"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="35"/>
+                <RowDefinition/>
+                <RowDefinition Height="137"/>
+                <RowDefinition Height="51"/>
             </Grid.RowDefinitions>
 
-            <Menu x:Name="menu" Margin="0,29,0,0" HorizontalAlignment="Stretch" Width="Auto" VerticalAlignment="Top" Height="23">
+            <Menu x:Name="menu" HorizontalAlignment="Stretch" Width="Auto" Grid.Row="1" VerticalContentAlignment="Center" Padding="4,2,0,0" Grid.ColumnSpan="3">
                 <MenuItem Header="Файл">
                     <MenuItem x:Name="menuConnect" Header="Подключить" Click="menuConnect_Click"/>
                     <Separator/>
@@ -46,180 +80,310 @@
                 </MenuItem>
 
             </Menu>
-            <Button x:Name="NewFileBtn" Content="Новый" HorizontalAlignment="Left" Margin="10,57,0,0" VerticalAlignment="Top" Width="52" Click="NewFileBtn_Click" Height="27"/>
-            <TabControl x:Name="tabControl" Margin="10,89,10,136">
-                <TabItem Header="Заказ">
-                    <Grid Background="White">
-                        <Border BorderBrush="#FFBBBBBB" BorderThickness="0,1,0,0" Margin="-1,206,0,0" Background="#FFEAEAEA">
-                            <Grid>
-                                <Label x:Name="label1" Content="X:" HorizontalAlignment="Left" Margin="14,11,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                                <Label x:Name="label1_Copy" Content="Y:" HorizontalAlignment="Left" Margin="14,39,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                                <xctk:DoubleUpDown x:Name="WidthUpDn" Margin="122,10,13,0" VerticalAlignment="Top" DisplayDefaultValueOnEmptyText="True" FormatString="000.00" DefaultValue="0" ValueChanged="WidthUpDn_ValueChanged"/>
-                                <xctk:DoubleUpDown x:Name="HeightUpDn" Margin="122,37,13,0" VerticalAlignment="Top" FormatString="000.00" DisplayDefaultValueOnEmptyText="True" DefaultValue="0" ValueChanged="HeightUpDn_ValueChanged" RenderTransformOrigin="0.639,1.45"/>
-                                <xctk:DoubleUpDown x:Name="XUpDn" HorizontalAlignment="Left" Margin="42,10,0,0" VerticalAlignment="Top" Width="66" DefaultValue="7" DisplayDefaultValueOnEmptyText="True" FormatString="0.00"/>
-                                <xctk:DoubleUpDown x:Name="YUpDn" HorizontalAlignment="Left" Margin="42,37,0,0" VerticalAlignment="Top" Width="66" FormatString="0.00" DefaultValue="7" DisplayDefaultValueOnEmptyText="True"/>
-                                <CheckBox x:Name="mashtabChek" Content="Усадка" HorizontalAlignment="Left" Margin="42,61,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.942,0.556" MouseDown="MashtabChek_MouseDown" Click="mashtabChek_Click" />
-                                <CheckBox x:Name="NoMashtab" Content="Без усадки" Margin="0,61,24,0" VerticalAlignment="Top" RenderTransformOrigin="0.975,3.267" HorizontalAlignment="Right" Width="79"/>
-                            </Grid>
-                        </Border>
-                        <ComboBox x:Name="FacturaCombo" Margin="104,112,13,0" VerticalAlignment="Top" SelectionChanged="FacturaCombo_SelectionChanged"/>
-                        <Label x:Name="label" Content="Фактура" HorizontalAlignment="Left" Margin="104,5,0,0" VerticalAlignment="Top" FontWeight="Bold" Padding="0"/>
-                        <Button x:Name="CalcAllBtn" Content="S" HorizontalAlignment="Left" Margin="5,26,0,0" VerticalAlignment="Top" Width="24" BorderThickness="2" Height="24" Click="CalcAllBtn_Click"/>
-                        <Label x:Name="label_Copy" Content="Размеры" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" FontWeight="Bold" Padding="0"/>
-                        <ComboBox x:Name="ColorCombo" Margin="104,139,13,0" VerticalAlignment="Top" SelectionChanged="ColorCombo_SelectionChanged"/>
-                        <ComboBox x:Name="SizeVariant" HorizontalAlignment="Left" Margin="62,5,0,0" VerticalAlignment="Top" Width="37" Padding="2" SelectedIndex="1">
-                            <ComboBoxItem Content="мм"/>
-                            <ComboBoxItem Content="см"/>
-                            <ComboBoxItem Content="м"/>
-                        </ComboBox>
-                        <Button x:Name="PlusFacturaBtn" Content="+" Margin="0,5,39,0" VerticalAlignment="Top" Height="20" Click="PlusFacturaBtn_Click" HorizontalAlignment="Right" Width="20"/>
-                        <TextBox x:Name="SqareBox" HorizontalAlignment="Left" Height="23" Margin="32,27,0,0" TextWrapping="Wrap" Text="Площадь" VerticalAlignment="Top" Width="67" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-                        <TextBox x:Name="SqareUBox" HorizontalAlignment="Left" Height="23" Margin="32,55,0,0" TextWrapping="Wrap" Text="по усадке" VerticalAlignment="Top" Width="67" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" />
-                        <TextBox x:Name="PerimetrBox" HorizontalAlignment="Left" Height="23" Margin="33,83,0,0" TextWrapping="Wrap" Text="Периметр" VerticalAlignment="Top" Width="66" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-                        <xctk:ByteUpDown x:Name="AngUpDn" HorizontalAlignment="Left" Margin="33,112,0,0" VerticalAlignment="Top" Width="66" DefaultValue="4" DisplayDefaultValueOnEmptyText="True" ValueChanged="AngUpDn_ValueChanged"/>
+            <Button x:Name="NewFileBtn" Content="Новый" HorizontalAlignment="Left" Margin="3,3,0,3" Width="60" Click="NewFileBtn_Click" Grid.Row="2" Grid.ColumnSpan="2"/>
 
-                        <Button x:Name="PlusFacturaBtn_Copy" Content="-" Margin="0,5,16,0" VerticalAlignment="Top" Height="20" Click="PlusFacturaBtn_Copy_Click" HorizontalAlignment="Right" Width="20"/>
-                        <Label x:Name="label1_Copy1" Content="Угл" HorizontalAlignment="Left" Margin="3,114,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                        <Label x:Name="label1_Copy2" Content="P:" HorizontalAlignment="Left" Margin="8,86,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                        <Label x:Name="label1_Copy3" Content="S(y):" HorizontalAlignment="Left" Margin="2,58,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                        <Label x:Name="label1_Copy4" Content="ФП:" HorizontalAlignment="Left" Margin="3,142,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                        <xctk:CalculatorUpDown x:Name="FpCalc" HorizontalAlignment="Left" Margin="33,140,0,0" VerticalAlignment="Top" Width="66"/>
-
-                        <Label x:Name="label1_Copy5" Content="Шов:" HorizontalAlignment="Left" Margin="-2,172,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                        <TextBox x:Name="ShovBox" HorizontalAlignment="Left" Height="23" Margin="33,169,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="66" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-                        <Label x:Name="label1_Copy6" Content="Врз:" HorizontalAlignment="Left" Margin="105,172,0,0" VerticalAlignment="Top" Padding="5,0"/>
-                        <TextBox x:Name="CutBox" Height="23" Margin="137,169,13,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center"/>
-                        <ListBox x:Name="facturaListCheck" Height="79" Margin="105,27,13,0" VerticalAlignment="Top" SelectionChanged="FacturaListCheck_SelectionChanged"/>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Настройки">
-                    <Grid Background="#FFE5E5E5" Margin="0,0,1,0">
-                        <CheckBox x:Name="SizeCheks" Content="Размеры" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" IsChecked="{Binding SetSize}" Click="SizeCheks_Click" Grid.ColumnSpan="2">
-                            <CheckBox.DataContext>
-                                <Properties:Settings/>
-                            </CheckBox.DataContext>
-                        </CheckBox>
-                        <CheckBox x:Name="CloseDocChek" Content="Закрывать больше" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top" IsChecked="True" Grid.ColumnSpan="2"/>
-                        <xctk:ByteUpDown x:Name="CloseDocVal" Margin="141,38,35,0" VerticalAlignment="Top" Minimum="1" DefaultValue="5" DisplayDefaultValueOnEmptyText="True"/>
-                        <xctk:ByteUpDown x:Name="SizeText" Margin="141,71,35,0" VerticalAlignment="Top" Minimum="1" DefaultValue="10" Value="10" DisplayDefaultValueOnEmptyText="True"/>
-                        <CheckBox x:Name="AutoSizeTextChek" Content="Размер текста авто" HorizontalAlignment="Left" Margin="10,73,0,0" VerticalAlignment="Top" IsChecked="True" Grid.ColumnSpan="2"/>
-                        <Label x:Name="label2" Content="Допуск усадки" HorizontalAlignment="Left" Margin="10,98,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2"/>
-                        <xctk:IntegerUpDown x:Name="usadkaDopusk" Margin="140,102,35,0" VerticalAlignment="Top" DefaultValue="2" DisplayDefaultValueOnEmptyText="True" Maximum="5" Minimum="0"/>
-                        <Label x:Name="label3" Content="%" Margin="0,98,6,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="29"/>
-                        <Label x:Name="label3_Copy" Content="Пт" Margin="0,68,5,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="30"/>
-                        <Label x:Name="label3_Copy1" Content="Шт" Margin="0,35,4,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="31"/>
-                        <CheckBox x:Name="kmpsCheckBox" Content="*.frw" HorizontalAlignment="Left" Margin="10,170,0,0" VerticalAlignment="Top" Click="KmpsCheckBox_Click" IsChecked="{Binding frwCheck}">
-                            <CheckBox.DataContext>
-                                <Properties:Settings/>
-                            </CheckBox.DataContext>
-                        </CheckBox>
-                        <CheckBox x:Name="JpgCheckBox" Content="*.jpg" HorizontalAlignment="Left" Margin="75,170,0,0" VerticalAlignment="Top" IsChecked="{Binding jpgCheck}" Click="JpgCheckBox_Click">
-                            <CheckBox.DataContext>
-                                <Properties:Settings/>
-                            </CheckBox.DataContext>
-                        </CheckBox>
-                        <CheckBox x:Name="CrmCheckBox" Content="*.ini(CRM)" HorizontalAlignment="Left" Margin="138,170,0,0" VerticalAlignment="Top" IsEnabled="False" IsChecked="{Binding crmCheck}">
-                            <CheckBox.DataContext>
-                                <Properties:Settings/>
-                            </CheckBox.DataContext>
-                        </CheckBox>
-                        <Button x:Name="HeadSetting" Content="Шапка" HorizontalAlignment="Left" Margin="10,203,0,0" VerticalAlignment="Top" Width="90" Height="32" Click="HeadSetting_Click"/>
-                        <Button x:Name="NameSetting" Content="Название" HorizontalAlignment="Left" Margin="121,203,0,0" VerticalAlignment="Top" Width="90" Height="32" Click="NameSetting_Click"/>
-                        <Label x:Name="label5" Content="Между координатами" HorizontalAlignment="Left" Margin="10,129,0,0" VerticalAlignment="Top"/>
-                        <xctk:IntegerUpDown x:Name="CoordDopusk" Margin="147,132,35,0" VerticalAlignment="Top" DefaultValue="{Binding CoordDopusk}" DisplayDefaultValueOnEmptyText="True" Maximum="1000" Minimum="0" RenderTransformOrigin="0.583,2.35" Text="50">
-                            <xctk:IntegerUpDown.DataContext>
-                                <Properties:Settings/>
-                            </xctk:IntegerUpDown.DataContext>
-                        </xctk:IntegerUpDown>
-                        <Label x:Name="label3_Copy2" Content="см" Margin="0,128,5,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="30"/>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Линейки" Height="22" VerticalAlignment="Top">
-                    <Grid Background="#FFE5E5E5">
-                        <ComboBox x:Name="comboBox" Margin="10,10,108,0" VerticalAlignment="Top"/>
-                        <Button x:Name="ConnectBtBtn" Content="Connect" Margin="0,11,10,0" VerticalAlignment="Top" Click="button1_Click" HorizontalAlignment="Right" Width="93"/>
-                        <xctk:ByteUpDown x:Name="CreateRoomUpDn" Margin="0,0,10,115" DefaultValue="4" DisplayDefaultValueOnEmptyText="True" ValueChanged="AngUpDn_ValueChanged" HorizontalAlignment="Right" Width="43" Height="20" VerticalAlignment="Bottom"/>
-                        <Label x:Name="label4" Content="Углов" HorizontalAlignment="Left" Margin="148,0,0,114" Height="26" VerticalAlignment="Bottom"/>
-                        <Button x:Name="CreateRoomBtn" Content="Создать" Margin="0,0,10,90" Click="CreateRoomBtn_Click" HorizontalAlignment="Right" Width="90" Height="20" VerticalAlignment="Bottom"/>
-                        <ListBox x:Name="DimentionlistBox" Margin="10,39,108,61" RenderTransformOrigin="0.5,0.5" SelectionChanged="DimentionlistBox_SelectionChanged">
-                            <ListBox.RenderTransform>
-                                <TransformGroup>
-                                    <ScaleTransform/>
-                                    <SkewTransform AngleX="0.503"/>
-                                    <RotateTransform/>
-                                    <TranslateTransform X="0.491"/>
-                                </TransformGroup>
-                            </ListBox.RenderTransform>
-                        </ListBox>
-                        <Button x:Name="StartMeasureBtn" Content="Начать" Margin="10,0,108,25" Click="StartMeasureBtn_Click" Height="27" VerticalAlignment="Bottom"/>
-                        <Button x:Name="ToSelectDimBtn" Content="Выбранным" Margin="0,73,8,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="90" Click="ToSelectDimBtn_Click"/>
-
-                        <Button x:Name="SplitLineBtn" Content="Разбить" Margin="0,0,10,25" Click="SplitLineBtn_Click" HorizontalAlignment="Right" Width="90" Height="27" VerticalAlignment="Bottom"/>
-                        <TextBox x:Name="DimVariableBox" Height="23" Margin="0,43,7,0" TextWrapping="Wrap" Text="200" VerticalAlignment="Top" HorizontalAlignment="Right" Width="93" KeyDown="DimVariableBox_KeyDown" GotFocus="DimVariableBox_GotFocus"/>
-                        <Button x:Name="FixDimBtn" Content="[...]" Margin="0,101,74,0" VerticalAlignment="Top" Click="FixDimBtn_Click" HorizontalAlignment="Right" Width="23"/>
-                        <CheckBox x:Name="DellBaseDimChek" Content="Удалить размер" HorizontalAlignment="Right" Margin="0,0,7,5" HorizontalContentAlignment="Right" Height="15" VerticalAlignment="Bottom"/>
-                        <Button x:Name="UnfixDimBtn" Content="(...)" Margin="0,101,41,0" VerticalAlignment="Top" Click="UnfixDimBtn_Click" HorizontalAlignment="Right" Width="23"/>
-                        <xctk:CalculatorUpDown x:Name="SplitLineUpDn" Margin="0,0,8,61" DefaultValue="4" HorizontalAlignment="Right" Width="90" RenderTransformOrigin="0.5,0.5" DisplayText="4" Height="24" VerticalAlignment="Bottom" Text="4"/>
-                        <Button x:Name="VariableDimBtn" Content="..." Margin="0,101,9,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="23" Click="VariableDimBtn_Click"/>
-                        <Button x:Name="ToPointBtn" Content="•" HorizontalAlignment="Right" Margin="0,126,74,0" VerticalAlignment="Top" Width="23" Click="ToPointBtn_Click"/>
-                        <Button x:Name="XInvertBtn" Content="⇆" HorizontalAlignment="Right" Margin="0,126,41,0" VerticalAlignment="Top" Width="23" BorderThickness="1"/>
-                        <Button x:Name="YInvertBtn" Content="⇅" HorizontalAlignment="Right" Margin="0,126,9,0" VerticalAlignment="Top" Width="23"/>
-
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Спасибо" BorderBrush="#FF62FF70">
-                    <TabItem.Background>
-                        <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
-                            <GradientStop Color="#FFF0F0F0" Offset="0"/>
-                            <GradientStop Color="#FF64ECA2" Offset="1"/>
-                        </LinearGradientBrush>
-                    </TabItem.Background>
-                    <Grid Background="#FFE5E5E5">
-                        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Программа абсолютно бесплатна и разрабатывается на добровольных началах." VerticalAlignment="Top" Width="183"/>
-                        <TextBlock x:Name="textBlock_Copy" HorizontalAlignment="Left" Margin="10,163,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193"><Run Text="Если она вам понравилась и вы хотите отблагодарить автора, то можете перейти по ссылке ниже."/><LineBreak/><Run/></TextBlock>
-                        <Button x:Name="button" Content="Яндекс.Деньги" HorizontalAlignment="Left" Margin="20,232,0,0" VerticalAlignment="Top" Width="183" Height="46" Click="Button_Click" IsEnabled="False" />
-                        <TextBlock x:Name="textBlock_Copy1" HorizontalAlignment="Left" Margin="10,78,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="193"><Run Text="Все свои вопросы по программе, или сотрудничеству вы можете направлять на"/><Run Text=": "/><Run Text="e.shadrunov@mail.ru"/><LineBreak/><Run/></TextBlock>
-                    </Grid>
-                </TabItem>
-
-            </TabControl>
-            <Button x:Name="ReCalcBtn" Content="Перемеряем" Margin="10,0,10,105" Height="26" VerticalAlignment="Bottom" Click="ReCalcBtn_Click"/>
-            <Grid Height="46" VerticalAlignment="Bottom">
-                <StackPanel Orientation="Horizontal" Margin="10,0,10,2" Cursor="Hand" Height="34" VerticalAlignment="Bottom">
-                    <Button x:Name="SaveBtn" Content="Сохранить" Width="93" Click="SaveBtn_Click" TextOptions.TextHintingMode="Fixed" />
-                    <Button x:Name="HeadBtn" Content="Шапка" Width="66" Click="HeadBtn_Click"/>
-                    <Button x:Name="PrintBtn" Content="Печать" IsEnabled="False" Width="70"/>
-                </StackPanel>
+            <Button x:Name="ReCalcBtn" Content="Перемеряем" Margin="10,0,10,105" Height="26" VerticalAlignment="Bottom" Click="ReCalcBtn_Click" Grid.Row="4" Grid.ColumnSpan="3"/>
+            <Grid Height="46" VerticalAlignment="Bottom" Grid.Row="4" Grid.ColumnSpan="3">
+                <DockPanel Margin="10,0,10,2" Cursor="Hand" Height="34" VerticalAlignment="Bottom">
+                    <Button x:Name="SaveBtn" DockPanel.Dock="Left" Content="Сохранить" MinWidth="100" Click="SaveBtn_Click" />
+                    <Button x:Name="HeadBtn" DockPanel.Dock="Left" Content="Шапка" MinWidth="100" Click="HeadBtn_Click" />
+                    <Button x:Name="PrintBtn" DockPanel.Dock="Left" Content="Печать" IsEnabled="False"  />
+                </DockPanel>
             </Grid>
-
-            <xctk:IntegerUpDown x:Name="NumberUpDn" Margin="126,57,50,0" VerticalAlignment="Top" Height="27" FontSize="16" DisplayDefaultValueOnEmptyText="True" Text="0000" RenderTransformOrigin="0.5,0.5" ValueChanged="NumberUpDn_ValueChanged">
-                <xctk:IntegerUpDown.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform/>
-                        <RotateTransform Angle="-0.048"/>
-                        <TranslateTransform/>
-                    </TransformGroup>
-                </xctk:IntegerUpDown.RenderTransform>
-            </xctk:IntegerUpDown>
-            <Button x:Name="OpenFileBtn" Content="Открыть" HorizontalAlignment="Left" Margin="66,57,0,0" VerticalAlignment="Top" Width="52" Click="OpenFileBtn_Click" Height="27"/>
-            <TextBox x:Name="paramBox_1" Margin="10,0,11,75" TextWrapping="Wrap" Text="Комментарий 1" Height="25" VerticalAlignment="Bottom" LostFocus="paramBox_1_LostFocus"/>
-            <TextBox x:Name="paramBox_2" Height="25" Margin="10,0,11,46" TextWrapping="Wrap" Text="Комментарий 2" VerticalAlignment="Bottom" LostFocus="paramBox_2_LostFocus"/>
-            <TextBox x:Name="sufixBox" Height="27" Margin="0,57,10,0" TextWrapping="Wrap" Text="{Binding sufix}" VerticalAlignment="Top" FontSize="16" LostFocus="TextBox_LostFocus" HorizontalAlignment="Right" Width="35">
+            <Button x:Name="OpenFileBtn" Content="Открыть" HorizontalAlignment="Left" Margin="22,3,0,3" Width="60" Click="OpenFileBtn_Click" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <Controls:NumericUpDown x:Name="NumberUpDn" Margin="39,3,51,3" Value="1" Maximum="999999" Minimum="1" NumericInputMode="Numbers" Grid.Row="2" Grid.Column="2"/>
+            <TextBox x:Name="paramBox_1" Margin="10,0,11,75" TextWrapping="Wrap" Text="Комментарий 1" Height="25" VerticalAlignment="Bottom" LostFocus="paramBox_1_LostFocus" Grid.Row="4" Grid.ColumnSpan="3"/>
+            <TextBox x:Name="paramBox_2" Height="25" Margin="10,0,11,46" TextWrapping="Wrap" Text="Комментарий 2" VerticalAlignment="Bottom" LostFocus="paramBox_2_LostFocus" Grid.Row="4" Grid.ColumnSpan="3"/>
+            <TextBox x:Name="sufixBox" Margin="0,3,3,3" TextWrapping="Wrap" Text="{Binding variable_suffix}" FontSize="16" LostFocus="TextBox_LostFocus" HorizontalAlignment="Right" Width="43" Grid.Row="2" Grid.Column="2">
                 <TextBox.DataContext>
                     <Properties:Settings/>
                 </TextBox.DataContext>
             </TextBox>
-            <Grid Grid.Row="1" Margin="0,10,0,0" >
-                <StatusBar>
+
+            <Grid Grid.Row="5" Margin="0,10,0,0" Grid.ColumnSpan="3" >
+                <StatusBar Margin="0,0,0,0">
                     <Label x:Name="KmpStatLbl" Content="Компас: Нет" MouseDoubleClick="KmpStatLbl_MouseDoubleClick" />
-                    <Label x:Name="SaveStatLabel" Content="Сохранили" />
+                    <Label x:Name="SaveStatLabel" Content="{DynamicResource StatLabel}" x:FieldModifier="public" />
                 </StatusBar>
             </Grid>
-            <Grid x:Name="HeadGrid" Height="29" VerticalAlignment="Top" Background="#FF40DE4E" MouseDown="HeadGrid_MouseDown" MouseUp="HeadGrid_MouseUp" MouseMove="HeadGrid_MouseMove" MouseLeave="HeadGrid_MouseLeave">
-                <Label x:Name="label6" Content="KompasCeilingMini" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <Button x:Name="CloseBtn" Content="X" HorizontalAlignment="Left" Margin="251,2,0,0" VerticalAlignment="Top" Width="25" Height="25" Background="#FFE84545" BorderBrush="White" Click="CloseBtn_Click"/>
-            </Grid>
+            <DockPanel x:Name="MenuDoc" Background="{DynamicResource ThemeBrush}" Grid.Row="3" HorizontalAlignment="Left" Width="50">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button x:Name="HamburgerButton" FontFamily="Segoe MDL2 Assets" Content="&#xE700;" FontSize="20"
+                    Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="HamburgerButton_Click"/>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" >
+                    <Button x:Name="MenuButton1" Selector.IsSelected="True" FontFamily="Segoe MDL2 Assets" Content="&#xECC6;" FontSize="21"
+                    Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="MenuButton1_Click"/>
+                    <TextBlock Text="Measure" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button x:Name="MenuButton2" FontFamily="Segoe MDL2 Assets" Content="&#xE94D;" FontSize="20"
+                        Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="MenuButton2_Click"/>
+                    <TextBlock Text="Calculator" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button x:Name="MenuButton3" FontFamily="Segoe MDL2 Assets" Content="&#xE713;" FontSize="20"
+                        Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="MenuButton3_Click"/>
+                    <TextBlock Text="Setting" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Height="50">
+                    <Button x:Name="DellObjBtn" FontFamily="Segoe MDL2 Assets" Content="&#xF78A;" FontSize="20"
+                        Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="DellObjBtn_Click"/>
+                    <TextBlock Text="Setting" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Height="50">
+                    <Button x:Name="MoveViewBtn" IsEnabled="True" FontFamily="Segoe MDL2 Assets" Content="&#xECE9;" FontSize="20"
+                        Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="MoveViewBtn_Click"/>
+                    <Button x:Name="ZoomIn" IsEnabled="True" FontFamily="Segoe MDL2 Assets" Content="&#xE8A3;" FontSize="20"
+                        Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="ZoomIn_Click"/>
+                    <Button x:Name="ZoomOut" IsEnabled="True" FontFamily="Segoe MDL2 Assets" Content="&#xE71F;" FontSize="20"
+                        Width="50" Height="50" Background="Transparent" BorderBrush="{x:Null}" Click="ZoomOut_Click"/>
+                </StackPanel>
+            </DockPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="6,0,0,136" Grid.RowSpan="2" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2">
+                <Grid x:Name="DimPanel" MinWidth="230" Visibility="Visible"  FlowDirection="LeftToRight" Width="247" HorizontalAlignment="Left">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="120"/>
+                        <RowDefinition Height="164*"/>
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="119"/>
+                        <ColumnDefinition Width="128"/>
+                    </Grid.ColumnDefinitions>
+                    <Controls:ToggleSwitch x:Name="AddingLineToggle" Content="Add" Margin="6,3" Grid.Row="2"/>
+                    <ComboBox x:Name="BTcombo" Margin="3,4,3,2" SelectionChanged="BTcombo_SelectionChanged" Initialized="BTcombo_Initialized" Grid.Column="1"/>
+                    <Button x:Name="ConnectBtBtn" HorizontalContentAlignment="Left" Content="ᛒ Connect" Margin="3,3,6,3" Click="button1_Click" Padding="10,1"/>
+
+
+                    <Controls:NumericUpDown x:Name="SplitLineUpDn" Margin="3,0,2,3" Height="26" VerticalAlignment="Bottom" Value="4" Grid.Row="4"/>
+                    <Button x:Name="SplitLineBtn" Content="Разбить" Margin="3,3,6,0" Click="SplitLineBtn_Click" Grid.Row="5" Height="27" VerticalAlignment="Top"/>
+                    <TextBox x:Name="DimVariableBox" Margin="3,3,41,3" TextWrapping="Wrap" Text="200" KeyDown="DimVariableBox_KeyDown" GotFocus="DimVariableBox_GotFocus" Grid.Row="1" VerticalContentAlignment="Center" Padding="5,0,-0.5,0"/>
+                    <CheckBox x:Name="DellBaseDimChek" Content="Удалить размер" Height="18" VerticalAlignment="Bottom" FlowDirection="LeftToRight" Grid.Row="5" Grid.ColumnSpan="2" Margin="0,0,3,0"/>
+                    <Button x:Name="RefreshDimBtn" FontFamily="Segoe MDL2 Assets" Content="&#xEDAB;" Margin="85,3,2,0" Click="RefreshDimBtn_Click" Height="27" VerticalAlignment="Top" Grid.Row="5" Grid.Column="1"/>
+                    <Button x:Name="DimUpBtn" Content="⯅" HorizontalAlignment="Left" Margin="3,0,0,20" Width="34" Click="DimUpBtn_Click" Height="27" VerticalAlignment="Bottom" Grid.Row="5" Grid.Column="1"/>
+                    <Button x:Name="DimDnBtn" Content="⯆" HorizontalAlignment="Left" Margin="41,0,0,20" Width="34" Click="DimDnBtn_Click" Height="27" VerticalAlignment="Bottom" Grid.Row="5" Grid.Column="1"/>
+
+                    <Grid Margin="3,2,2,4" Grid.Row="3">
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="33*"/>
+                            <RowDefinition Height="33*"/>
+                            <RowDefinition Height="33*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="33*"/>
+                            <ColumnDefinition Width="33*"/>
+                            <ColumnDefinition Width="33*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="FixDimBtn" Content="[..]" Margin="0,0,0,0" VerticalAlignment="Center" Click="FixDimBtn_Click" HorizontalAlignment="Center" Width="25" Height="25" FontSize="14" Padding="0" FontFamily="Segoe"/>
+                        <Button x:Name="UnfixDimBtn" Content="(..)" Margin="0,0,0,0" VerticalAlignment="Center" Click="UnfixDimBtn_Click" HorizontalAlignment="Center" Width="25" Height="25" FontSize="14"  Grid.Column="1" Padding="0" FontFamily="Segoe"/>
+                        <Button x:Name="VariableDimBtn" Content=".." Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center" Width="25" Height="25" Click="VariableDimBtn_Click" FontSize="14" Grid.Column="2" Padding="0"  FontFamily="Segoe"/>
+                        <Button x:Name="ConstraitLineToPointBtn" Content="⇲" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Width="25" Height="25" Click="ConstraitLineToPointBtn_Click" FontSize="14" Grid.Column="1" Grid.Row="1" Padding="0"  FontFamily="Segoe"/>
+                        <Button x:Name="ToPointBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE73F;" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Width="25" Height="25" Click="ToPointBtn_Click" FontSize="14" Grid.Column="2" Grid.Row="1" Padding="0"/>
+                        <Button x:Name="XInvertBtn" Content="⇆" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Width="25" Height="25" BorderThickness="1" Click="XInvertBtn_Click" FontSize="14"  Grid.Column="1" Grid.Row="2" Padding="0"  FontFamily="Segoe"/>
+                        <Button x:Name="YInvertBtn" Content="⇅" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Width="25" Height="25" Click="YInvertBtn_Click" Grid.Column="2" Grid.Row="2" Padding="0" FontSize="14"  FontFamily="Segoe"/>
+                        <Button x:Name="ObtuseAngleBtn" Content="90" HorizontalAlignment="Center" Margin="5,6" VerticalAlignment="Center" Width="25" Height="26" Click="ObtuseAngleBtn_Click" FontSize="14" Grid.Row="1" Padding="0"  FontFamily="Segoe"/>
+                        <Button x:Name="LockBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE72E;" HorizontalAlignment="Center" Margin="5,6" VerticalAlignment="Center" Width="25" Height="26" BorderThickness="1" Click="LockBtn_Click" FontSize="14" Grid.Row="2" Padding="0"/>
+                    </Grid>
+                    <TabControl x:Name="tabControl" Margin="3,2,0,4" Grid.Row="1" Grid.RowSpan="4" FlowDirection="LeftToRight" Grid.Column="1">
+                        <TabItem Header="..">
+                            <Grid Background="#FFE5E5E5" Margin="0,0,0,0">
+                                <Border BorderThickness="2">
+                                    <ListBox x:Name="VariableDimentionlistBox" Margin="0" SelectionChanged="DimentionlistBox_SelectionChanged" SelectionMode="Extended" Grid.Row="2" Grid.RowSpan="2"/>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="(..)">
+                            <Grid Background="#FFE5E5E5" Margin="0,0,0,0">
+                                <Border BorderThickness="2">
+                                    <ListBox x:Name="FreeDimentionlistBox" Margin="0" SelectionChanged="DimentionlistBox_SelectionChanged" SelectionMode="Extended" Grid.Row="2" Grid.RowSpan="2"/>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+                        <TabItem Header="[..]">
+                            <Grid Background="#FFE5E5E5" Margin="0,0,0,0">
+                                <Border BorderThickness="2">
+                                    <ListBox x:Name="FixDimentionlistBox" Margin="0" SelectionChanged="DimentionlistBox_SelectionChanged" SelectionMode="Extended" Grid.Row="2" Grid.RowSpan="2"/>
+                                </Border>
+                            </Grid>
+                        </TabItem>
+
+                    </TabControl>
+                    <Button x:Name="SetDimBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE8FB;" Margin="0,3,6,3" HorizontalAlignment="Right" Width="30" Click="SetDimBtn_Click" FontSize="14" Padding="0" Grid.Row="1"/>
+                </Grid>
+                <Border BorderThickness="0,0,0,0">
+                    <Grid x:Name="CalculatPanel" Visibility="Visible">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="30"/>
+                            <RowDefinition Height="132*"/>
+                            <RowDefinition Height="115"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="35"/>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="120"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.ColumnSpan="3" Height="104" VerticalAlignment="Bottom" Grid.Row="8" Margin="0,0,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="35*"/>
+                                    <RowDefinition Height="35*"/>
+                                    <RowDefinition Height="44*"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="35"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="120"/>
+                                </Grid.ColumnDefinitions>
+                                <Label x:Name="label1" Content="X:" Margin="0,0,0,0" VerticalAlignment="Center" Padding="0,0" Height="16" HorizontalAlignment="Center"/>
+                                <Label x:Name="label1_Copy" Content="Y:" HorizontalAlignment="Center" Margin="0,0,0,0" VerticalAlignment="Center" Padding="5,0" Height="16" Width="19" Grid.Row="1"/>
+                                <Controls:NumericUpDown x:Name="XUpDn" Margin="5,5,5,5" Background="White" Grid.Column="1" ValueChanged="XUpDn_ValueChanged"/>
+                                <Controls:NumericUpDown x:Name="YUpDn" Margin="5,5,5,5" Grid.Column="1" Grid.Row="1" ValueChanged="YUpDn_ValueChanged"/>
+                                <Controls:NumericUpDown x:Name="WidthUpDn" Margin="5,5,5,5" Background="White" Grid.Column="2" ValueChanged="WidthUpDn_ValueChanged"/>
+                                <Controls:NumericUpDown x:Name="HeightUpDn" Margin="5,5,5,5" Grid.Column="2" Grid.Row="1" ValueChanged="HeightUpDn_ValueChanged"/>
+                                <CheckBox x:Name="mashtabChek" Content="Усадка" Margin="5,5,5,0" VerticalAlignment="Top" RenderTransformOrigin="0.942,0.556" MouseDown="MashtabChek_MouseDown" Click="mashtabChek_Click" Grid.Column="1" Height="15" Grid.Row="2" />
+                                <CheckBox x:Name="NoMashtab" Content="Без усадки" Margin="5,5,5,0" VerticalAlignment="Top" RenderTransformOrigin="0.975,3.267" Grid.Column="2" Height="16" Grid.Row="2"/>
+                            </Grid>
+                        </Border>
+                        <ComboBox x:Name="FacturaCombo" Margin="3" SelectionChanged="FacturaCombo_SelectionChanged" Grid.Column="2" Grid.Row="4"/>
+                        <Label x:Name="label" Content="Фактура" HorizontalAlignment="Left" Margin="3,8,0,6" FontWeight="Bold" Padding="0" Grid.Column="2" Width="49" VerticalAlignment="Center" Height="16"/>
+                        <Button x:Name="CalcAllBtn" Content="Выбрать" Margin="8,5,0,0" Padding="0" VerticalAlignment="Top" BorderThickness="2" Height="22" Click="CalcAllBtn_Click" Grid.ColumnSpan="2"/>
+                        <ComboBox x:Name="ColorCombo" Margin="3" SelectionChanged="ColorCombo_SelectionChanged" Grid.Column="2" Grid.Row="5"/>
+
+                        <Button x:Name="PlusFacturaBtn" Content="+" Margin="0,5,30,0" VerticalAlignment="Top" Height="20" Click="PlusFacturaBtn_Click" HorizontalAlignment="Right" Width="20" Grid.Column="2"/>
+                        <TextBox x:Name="SqareBox" Controls:ButtonHelper.PreserveTextCase="True" Margin="3,3,3,3" TextWrapping="Wrap" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Column="1" Controls:TextBoxHelper.Watermark="Площадь" Grid.Row="1" Padding="0"/>
+                        <TextBox x:Name="SqareUBox" Margin="3,3,3,3" TextWrapping="Wrap" Text="по усадке" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="2" />
+                        <TextBox x:Name="PerimetrBox" Margin="3,3,3,3" TextWrapping="Wrap" Text="Периметр" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="3" ToolTipOpening="PerimetrBox_ToolTipOpening">
+                            <TextBox.ToolTip>
+                                <ToolTip Background="White" Foreground="DarkGray" Placement="Relative" HorizontalOffset="15" VerticalOffset="10">
+                                    <StackPanel>
+                                        <TextBlock>Периметр</TextBlock>
+                                        <TextBlock x:Name="PLineBlock">Прямые</TextBlock>
+                                        <TextBlock x:Name="PCurveBlock">Кривые</TextBlock>
+                                    </StackPanel>
+                                </ToolTip>
+                            </TextBox.ToolTip>
+                        </TextBox>
+
+                        <Button x:Name="PlusFacturaBtn_Copy" Content="-" Margin="0,5,2,0" VerticalAlignment="Top" Height="20" Click="PlusFacturaBtn_Copy_Click" HorizontalAlignment="Right" Width="20" Grid.Column="2"/>
+                        <Label x:Name="label1_Copy1" Content="Угл" Padding="0" Grid.Row="4" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Margin="1,1,1,1"/>
+
+                        <Label x:Name="label1_Copy2" Content="P:" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5,0" Height="16" Width="24" Grid.Row="3" Margin="8,7,7,7"/>
+                        <Label x:Name="label1_Copy3" Content="S(y):" VerticalAlignment="Center" Padding="5,0" Height="16" HorizontalContentAlignment="Center" Grid.Row="2" HorizontalAlignment="Center" Margin="2,7,5,7" Width="32"/>
+                        <Label x:Name="label1_Copy4" Content="ФП:" Grid.Row="5" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
+                        <Label x:Name="label1_Copy5" Content="Шов:" VerticalAlignment="Center" Padding="5,0" Height="16" Grid.Row="6" HorizontalAlignment="Center" Margin="-1,7,4,7" Width="36"/>
+                        <TextBox x:Name="ShovBox" Margin="3,3,3,3" TextWrapping="Wrap" Text="0" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Column="1" Grid.Row="6"/>
+                        <Label x:Name="label1_Copy6" Content="Врз:" HorizontalAlignment="Left" Margin="3,7,0,7" Padding="0,0" Grid.Column="2" Width="32" Grid.Row="6" VerticalAlignment="Center" Height="16"/>
+                        <TextBox x:Name="CutBox" Margin="37,3,3,3" TextWrapping="Wrap" Text="0" IsReadOnly="True" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Grid.Column="2" Grid.Row="6"/>
+                        <ListBox x:Name="facturaListCheck" Margin="3" SelectionChanged="FacturaListCheck_SelectionChanged" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"/>
+                        <Controls:NumericUpDown x:Name="FpUpDn" Margin="3,3,3,3" Grid.Column="1" Grid.Row="5"/>
+                        <Controls:NumericUpDown x:Name="AngUpDn" Margin="3,3,3,3" Grid.Column="1" ValueChanged="AngUpDn_ValueChanged" Grid.Row="4"/>
+                        <Label x:Name="label1_Copy7" Content="S:" VerticalAlignment="Center" Padding="5,0" Height="16" HorizontalContentAlignment="Center" Grid.Row="1" HorizontalAlignment="Center" Margin="10,7,9,7" Width="20"/>
+                    </Grid>
+                </Border>
+
+                <Grid x:Name="SettingPanel"  MinWidth="200">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="100*"/>
+                    </Grid.ColumnDefinitions>
+                    <CheckBox x:Name="SizeCheks" Content="Размеры" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" IsChecked="{Binding stg_size_auto}" Height="15" Width="68" Grid.ColumnSpan="2" Click="SizeCheks_Click">
+                        <CheckBox.DataContext>
+                            <Properties:Settings/>
+                        </CheckBox.DataContext>
+                    </CheckBox>
+
+                    <Controls:NumericUpDown x:Name="SizeText" Height="23" Margin="5,68,40,0" Value="{Binding stg_text_size}" ValueChanged="SizeText_ValueChanged_1"  VerticalAlignment="Top" Grid.Column="2">
+                        <Controls:NumericUpDown.DataContext>
+                            <Properties:Settings/>
+                        </Controls:NumericUpDown.DataContext>
+                    </Controls:NumericUpDown>
+
+                    <CheckBox x:Name="CloseDocChek" Content="Закрывать больше" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top" IsChecked="True" Grid.ColumnSpan="2" FontSize="10" Height="15" Width="106">
+                        <CheckBox.DataContext>
+                            <Properties:Settings/>
+                        </CheckBox.DataContext>
+                    </CheckBox>
+                    <CheckBox x:Name="AutoSizeTextChek" Content="Размер текста авто" HorizontalAlignment="Left" Margin="10,73,0,0" VerticalAlignment="Top" IsChecked="{Binding stg_text_auto}" Grid.ColumnSpan="2" FontSize="10" Height="15" Width="107">
+                        <CheckBox.DataContext>
+                            <Properties:Settings/>
+                        </CheckBox.DataContext>
+                    </CheckBox>
+                    <Label x:Name="label2" Content="Допуск усадки" HorizontalAlignment="Left" Margin="10,98,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="26" Width="90"/>
+                    <Label x:Name="label3" Content="%" Margin="0,98,6,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="29" Grid.Column="2" Height="26"/>
+                    <Label x:Name="label3_Copy" Content="Пт" Margin="0,68,5,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="30" Grid.Column="2" Height="26"/>
+                    <Label x:Name="label3_Copy1" Content="Шт" Margin="0,35,4,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="31" Grid.Column="2" Height="26"/>
+                    <CheckBox x:Name="kmpsCheckBox" Content="*.frw" HorizontalAlignment="Left" Margin="10,170,0,0" VerticalAlignment="Top" Click="KmpsCheckBox_Click" IsChecked="{Binding stg_frw_check}" Height="15" Width="44">
+                        <CheckBox.DataContext>
+                            <Properties:Settings/>
+                        </CheckBox.DataContext>
+                    </CheckBox>
+
+                    <CheckBox x:Name="CrmCheckBox" Content="*.ini(CRM)" HorizontalAlignment="Left" Margin="3,170,0,0" VerticalAlignment="Top" IsEnabled="False" IsChecked="{Binding stg_crm_check}" Grid.Column="2" Height="15" Width="73">
+                        <CheckBox.DataContext>
+                            <Properties:Settings/>
+                        </CheckBox.DataContext>
+                    </CheckBox>
+
+
+                    <Button x:Name="HeadSetting" Content="Шапка" HorizontalAlignment="Left" Margin="10,203,0,0" VerticalAlignment="Top" Width="90" Height="32" Click="HeadSetting_Click" Grid.ColumnSpan="2"/>
+                    <Label x:Name="label_Copy" Content="x" HorizontalAlignment="Left" Margin="0,7,0,0" VerticalAlignment="Top" FontWeight="Bold" Padding="0" Height="20" Width="11" RenderTransformOrigin="0.833,13.625" Grid.Column="2"/>
+                    <ComboBox x:Name="SizeVariant" Margin="10,7,10,0" SelectionChanged="SizeVariant_SelectionChanged" VerticalAlignment="Top" Padding="2" Height="20" Grid.Column="2" IsVisibleChanged="SizeVariant_IsVisibleChanged">
+                        <ComboBox.DataContext>
+                            <Properties:Settings/>
+                        </ComboBox.DataContext>
+                        <ComboBoxItem Content="1"/>
+                        <ComboBoxItem Content="10"/>
+                        <ComboBoxItem Content="100"/>
+                    </ComboBox>
+                    <Button x:Name="NameSetting" Content="Название" HorizontalAlignment="Left" Margin="0,203,0,0" VerticalAlignment="Top" Width="90" Height="32" Click="NameSetting_Click" Grid.Column="2"/>
+                    <Label x:Name="label5" Content="Дистанция" HorizontalAlignment="Left" Margin="10,129,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="26" Width="107"/>
+                    <Label x:Name="label3_Copy2" Content="см" Margin="0,128,5,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="30" Grid.Column="2" Height="26"/>
+                    <Controls:NumericUpDown x:Name="CloseDocUpDn" Height="23" Margin="5,35,40,0" Value="{Binding stg_closelast_val}" ValueChanged="CloseDocUpDn_ValueChanged"  VerticalAlignment="Top" Grid.Column="2">
+                        <Controls:NumericUpDown.DataContext>
+                            <Properties:Settings/>
+                        </Controls:NumericUpDown.DataContext>
+                    </Controls:NumericUpDown>
+                    <Controls:NumericUpDown x:Name="DopuskUpDN" Height="23" Margin="5,101,40,0" Value="{Binding stg_dopuskUsadka}" ValueChanged="DopuskUpDN_ValueChanged" VerticalAlignment="Top" Grid.Column="2">
+                        <Controls:NumericUpDown.DataContext>
+                            <Properties:Settings/>
+                        </Controls:NumericUpDown.DataContext>
+                    </Controls:NumericUpDown>
+                    <Controls:NumericUpDown x:Name="DistanceUPDn" Height="23" Margin="5,132,40,0" Value="{Binding stg_crd_dopusk }" ValueChanged="DistanceUPDn_ValueChanged" VerticalAlignment="Top" Grid.Column="2">
+                        <Controls:NumericUpDown.DataContext>
+                            <Properties:Settings/>
+                        </Controls:NumericUpDown.DataContext>
+                    </Controls:NumericUpDown>
+                    <CheckBox x:Name="jpgCheckBox" Content="*.jpg" HorizontalAlignment="Left" Margin="0,170,0,0" VerticalAlignment="Top" Click="KmpsCheckBox_Click" IsChecked="{Binding stg_frw_check}" Height="15" Width="45" Grid.Column="1">
+                        <CheckBox.DataContext>
+                            <Properties:Settings/>
+                        </CheckBox.DataContext>
+                    </CheckBox>
+                </Grid>
+
+            </StackPanel>
+
+            <DockPanel LastChildFill="False" Margin="0,0,0,0" Background="{DynamicResource ThemeBrush}" MouseLeftButtonDown="DockPanel_MouseLeftButtonDown" Grid.ColumnSpan="3">
+                <Image DockPanel.Dock="Left" Width="25" Height="25" Margin="3" Source="M_logo_v-05.png"/>
+                <Label DockPanel.Dock="Left" Content="KompasCeilingDemo"/>
+                <Button x:Name="CloseMainBtn" DockPanel.Dock="Right" Background="Red" Width="25" Height="25" Controls:ButtonHelper.CornerRadius="1" Content="X" Foreground="White" Margin="2" Click="CloseMainBtn_Click"/>
+                <Button x:Name="MinimezeMainBtn" DockPanel.Dock="Right" Background="#FF5181FF" Width="25" Height="25" Controls:ButtonHelper.CornerRadius="1" Content="_" Foreground="White" Margin="2,2.5" Click="MinimezeMainBtn_Click" VerticalContentAlignment="Bottom" Padding="1,0,1,2"/>
+                <Button x:Name="LockFrameBtn" FontFamily="Segoe MDL2 Assets" Content="&#xE72E;" DockPanel.Dock="Right" Background="#FFFFB051" Width="25" Height="25" Controls:ButtonHelper.CornerRadius="1" Foreground="White" Margin="2,2.5" Click="LockFrameBtn_Click" VerticalContentAlignment="Bottom"/>
+            </DockPanel>
         </Grid>
 
     </Border>

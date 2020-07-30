@@ -12,7 +12,7 @@ namespace KompasCeilingMini.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.3.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.4.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -25,37 +25,25 @@ namespace KompasCeilingMini.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string WorkFolder {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int position_x {
             get {
-                return ((string)(this["WorkFolder"]));
+                return ((int)(this["position_x"]));
             }
             set {
-                this["WorkFolder"] = value;
+                this["position_x"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int psX {
+        public int position_y {
             get {
-                return ((int)(this["psX"]));
+                return ((int)(this["position_y"]));
             }
             set {
-                this["psX"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int psY {
-            get {
-                return ((int)(this["psY"]));
-            }
-            set {
-                this["psY"] = value;
+                this["position_y"] = value;
             }
         }
         
@@ -97,20 +85,20 @@ namespace KompasCeilingMini.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool SetSize {
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public double stg_text_size {
             get {
-                return ((bool)(this["SetSize"]));
+                return ((double)(this["stg_text_size"]));
             }
             set {
-                this["SetSize"] = value;
+                this["stg_text_size"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\\DefaultValue." +
-            "mdf;Integrated Security=True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=(localdb)\\MSSQLLocalDB; Integrated Security=true; AttachDbFilename=|D" +
+            "ataDirectory|\\DefaultValue.mdf")]
         public string EasyCeilingConnectionString {
             get {
                 return ((string)(this["EasyCeilingConnectionString"]));
@@ -123,66 +111,67 @@ namespace KompasCeilingMini.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool CloseLast {
+        public bool stg_closelast_check {
             get {
-                return ((bool)(this["CloseLast"]));
+                return ((bool)(this["stg_closelast_check"]));
             }
             set {
-                this["CloseLast"] = value;
+                this["stg_closelast_check"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public int CloseLastVal {
+        public int stg_closelast_val {
             get {
-                return ((int)(this["CloseLastVal"]));
+                return ((int)(this["stg_closelast_val"]));
             }
             set {
-                this["CloseLastVal"] = value;
+                this["stg_closelast_val"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool frwCheck {
+        public bool stg_frw_check {
             get {
-                return ((bool)(this["frwCheck"]));
+                return ((bool)(this["stg_frw_check"]));
             }
             set {
-                this["frwCheck"] = value;
+                this["stg_frw_check"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool jpgCheck {
+        public bool stg_jpg_check {
             get {
-                return ((bool)(this["jpgCheck"]));
+                return ((bool)(this["stg_jpg_check"]));
             }
             set {
-                this["jpgCheck"] = value;
+                this["stg_jpg_check"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool crmCheck {
+        public bool stg_crm_check {
             get {
-                return ((bool)(this["crmCheck"]));
+                return ((bool)(this["stg_crm_check"]));
             }
             set {
-                this["crmCheck"] = value;
+                this["stg_crm_check"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{Date} {Time}")]
+        [global::System.Configuration.DefaultSettingValueAttribute("{Date} {Time}\r\n\r\nЗаказ №{Number} {Suffix}\r\n{Comment1}\r\n\r\n<loop>{factura} ({color}" +
+            ") <b>пог.={lenth}</b></loop>\r\nS={Sqare} P={Perimetr} Вырез={cut}")]
         public string HeadText {
             get {
                 return ((string)(this["HeadText"]));
@@ -194,7 +183,7 @@ namespace KompasCeilingMini.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{Number} {Suffix}")]
+        [global::System.Configuration.DefaultSettingValueAttribute("{Number} S({Sqare}) {Comment1}")]
         public string NameFileText {
             get {
                 return ((string)(this["NameFileText"]));
@@ -207,24 +196,132 @@ namespace KompasCeilingMini.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string sufix {
+        public string variable_suffix {
             get {
-                return ((string)(this["sufix"]));
+                return ((string)(this["variable_suffix"]));
             }
             set {
-                this["sufix"] = value;
+                this["variable_suffix"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        public double CoordDopusk {
+        public double stg_crd_dopusk {
             get {
-                return ((double)(this["CoordDopusk"]));
+                return ((double)(this["stg_crd_dopusk"]));
             }
             set {
-                this["CoordDopusk"] = value;
+                this["stg_crd_dopusk"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool stg_text_auto {
+            get {
+                return ((bool)(this["stg_text_auto"]));
+            }
+            set {
+                this["stg_text_auto"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BlueAddres {
+            get {
+                return ((string)(this["BlueAddres"]));
+            }
+            set {
+                this["BlueAddres"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("temp")]
+        public string stg_work_folders {
+            get {
+                return ((string)(this["stg_work_folders"]));
+            }
+            set {
+                this["stg_work_folders"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string stg_end_folder {
+            get {
+                return ((string)(this["stg_end_folder"]));
+            }
+            set {
+                this["stg_end_folder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool stg_size_auto {
+            get {
+                return ((bool)(this["stg_size_auto"]));
+            }
+            set {
+                this["stg_size_auto"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public double stg_dopuskUsadka {
+            get {
+                return ((double)(this["stg_dopuskUsadka"]));
+            }
+            set {
+                this["stg_dopuskUsadka"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int stg_compensation_val {
+            get {
+                return ((int)(this["stg_compensation_val"]));
+            }
+            set {
+                this["stg_compensation_val"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public int stg_compensation_index {
+            get {
+                return ((int)(this["stg_compensation_index"]));
+            }
+            set {
+                this["stg_compensation_index"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool head_resize {
+            get {
+                return ((bool)(this["head_resize"]));
+            }
+            set {
+                this["head_resize"] = value;
             }
         }
     }

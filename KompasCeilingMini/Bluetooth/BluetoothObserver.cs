@@ -1,96 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Timers;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.Advertisement;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
+
 using Windows.Security.Cryptography;
 
 
 namespace BlueTest.BlueClass
 {
-    public class BluetoothObserver : INotifyPropertyChanged
+    public class BluetoothObserver
     {
-        BluetoothLEAdvertisementWatcher Watcher { get; set; }
+        public static BluetoothLEAdvertisementWatcher Watcher { get => _watcher; set => _watcher = value; }
         private string _services;
         private string _characteristic;
+        private string _macdevice;
         private string _namedevice;
+        private static BluetoothLEDevice _bluetoothLeDevice;
         private static BluetoothLEAdvertisementWatcher _watcher;
+        private System.Timers.Timer aTimer;
 
         //Получить статус
-        private bool GetAsyncConnect { get; set; } = false;
 
+        public event EventHandler<bool> ConnectChange;
+
+        public event EventHandler<string> statlabelChange;
 
         private List<string> GetAsyncList { get; set; } //Лист размеров
 
         //Вызов листа размеров
-        public async Task<List<string>> UpdateEmployeeList()
-        {
-            //C# anonymous AsyncTask
 
-            return await Task.Factory.StartNew(() =>
-            {
-                return GetAsyncList;
-            });
-        }
         //
         //Последний замер
         //
         public string lastDim { get; private set; }
-        public async Task<string> AsyncLastDimmenetion()
-        {
-            //C# anonymous AsyncTask
 
-            return await Task.Factory.StartNew(() =>
-            {
-                return lastDim;
-            });
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(PropertyChangedEventArgs e)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-                handler(this, e);
-        }
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
-        }
-
-        public string LastDim
-        {
-            get { return lastDim; }
-            set
-            {
-                if (value != lastDim)
-                {
-                    lastDim = value;
-                    OnPropertyChanged("ImageFullPath");
-                }
-            }
-        }
-
-
-
-
-        public async Task<bool> UpdateConnectStat()
-        {
-            //C# anonymous AsyncTask
-
-            return await Task.Factory.StartNew(() =>
-            {
-                return GetAsyncConnect;
-            });
-        }
-
-
+        public event EventHandler<double> onLastDimention;
 
 
         //Получить последний размер
@@ -98,115 +47,133 @@ namespace BlueTest.BlueClass
 
         //Список всех замеров
 
-
-
-
-        public void Start(string NameDevice, string Services, string Characteristic)
+        public void Start(string NameDevice, string MacDevice, string Services, string Characteristic)
         {
-            _services = Services;
-            _characteristic = Characteristic;
-            _namedevice = NameDevice;
 
-            GetAsyncList = new List<string>();
-
-            _watcher = new BluetoothLEAdvertisementWatcher()
+            if (_bluetoothLeDevice == null)
             {
-                ScanningMode = BluetoothLEScanningMode.Active
-            };
-            _watcher.Received += Watcher_Received;
-            _watcher.Stopped += Watcher_Stopped;
-            _watcher.Start();
-        }
+                _services = Services;
+                _characteristic = Characteristic;
+                _macdevice = MacDevice;
+                _namedevice = NameDevice;
 
-        public void Stop() 
-        {
-            _watcher.Stop();
-        }
-        private bool isFindDevice { get; set; } = false;
-        private async void Watcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
-        {
-            if (isFindDevice)
-                return;
-            if (args.Advertisement.LocalName.Contains(_namedevice))
-            {
-                isFindDevice = true;
-                GetAsyncConnect = true;
-                BluetoothLEDevice bluetoothLeDevice = await BluetoothLEDevice.FromBluetoothAddressAsync(args.BluetoothAddress);
-                GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync();//Получаем сервисы
-
-                if (result.Status == GattCommunicationStatus.Success)
+                _watcher = new BluetoothLEAdvertisementWatcher()
                 {
-                    var services = result.Services;
-                    foreach (var service in services)
+                    ScanningMode = BluetoothLEScanningMode.Active
+                };
+                _watcher.SignalStrengthFilter.InRangeThresholdInDBm = -50;
+                _watcher.SignalStrengthFilter.InRangeThresholdInDBm = -90;
+                _watcher.SignalStrengthFilter.OutOfRangeTimeout = TimeSpan.FromSeconds(2);
+                _watcher.Received += Watcher_Received;
+                _watcher.Stopped += Watcher_Stopped;
+
+                statlabelChange(this, "Запускаем");
+                _watcher.Start();
+            }
+            else GattDevice(_bluetoothLeDevice.BluetoothAddress);
+        }
+
+        public bool isFindDevice { get; set; } = false;
+        private void Watcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
+        {
+            /*statlabelChange(this, "Сканируем..");
+
+            if (isFindDevice)
+                return;*/
+            if (args.Advertisement.LocalName.Contains(_namedevice))
+                GattDevice(args.BluetoothAddress);
+        }
+
+        private async void GattDevice(ulong adress)
+        {
+            statlabelChange(this, "Нашли");
+            _bluetoothLeDevice = await BluetoothLEDevice.FromBluetoothAddressAsync(adress);
+
+            GC.KeepAlive(_bluetoothLeDevice);
+            if (_bluetoothLeDevice.DeviceId == _macdevice)
+            {
+                GattDeviceServicesResult gattService = await _bluetoothLeDevice.GetGattServicesForUuidAsync(new Guid(_services), BluetoothCacheMode.Cached);
+
+                //GattDeviceServicesResult GattServices = await _bluetoothLeDevice.GetGattServicesAsync();//Получаем сервисы
+
+                _bluetoothLeDevice.ConnectionStatusChanged += onBluetoothConnectionStatus;
+
+                if (gattService.Status == GattCommunicationStatus.Success)
+                {
+                    var service = gattService.Services.First();
+
+                    GattCharacteristicsResult characteristicsResult = await service.GetCharacteristicsForUuidAsync(new Guid(_characteristic), BluetoothCacheMode.Cached);
+
+                    if (characteristicsResult.Status == GattCommunicationStatus.Success)
                     {
+                        var characteristic = characteristicsResult.Characteristics.First();
 
-                        if (!service.Uuid.ToString().StartsWith(_services))
+                        GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
+
+                        if (properties.HasFlag(GattCharacteristicProperties.Notify))
                         {
-                            continue;
-                        }
-
-                        GattCharacteristicsResult characteristicsResult = await service.GetCharacteristicsAsync();
-
-                        if (characteristicsResult.Status == GattCommunicationStatus.Success)
-                        {
-                            var characteristics = characteristicsResult.Characteristics;
-                            foreach (var characteristic in characteristics)
-                            {//Подписываемся на изменение характеристики
-
-
-                                if (!characteristic.Uuid.ToString().StartsWith(_characteristic))
+                            try
+                            {
+                                var notifyResult = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+                                      GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                                if (notifyResult == GattCommunicationStatus.Success)
                                 {
-                                    continue;
+                                    statlabelChange(this, "Подключено");
+                                    characteristic.ValueChanged += Charac_ValueChangedAsync;
+                                    GC.KeepAlive(characteristic);
+                                    isFindDevice = true;
+                                    _watcher.Stop();
+                                    SetTimer();
+                                    return;
                                 }
-
-                                GattCharacteristicProperties properties = characteristic.CharacteristicProperties;
-
-                                if (properties.HasFlag(GattCharacteristicProperties.Notify))
-                                {
-                                    var notifyResult = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                                          GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                                    if (notifyResult == GattCommunicationStatus.Success)
-                                    {
-                                        characteristic.ValueChanged += Charac_ValueChangedAsync;
-
-                                        return;
-                                    }
-                                }
-
-                                /* До лучших времен
-if (properties.HasFlag(GattCharacteristicProperties.Read))
-{
-    GattReadResult gattResult = await characteristic.ReadValueAsync();
-    if (gattResult.Status == GattCommunicationStatus.Success)
-    {
-        var reader = DataReader.FromBuffer(gattResult.Value);
-        byte[] input = new byte[reader.UnconsumedBufferLength];
-        reader.ReadBytes(input);
-
-        _list.Add("value " + Encoding.UTF8.GetString(input, 0, input.Length));
-        //Читаем input
-    }
-}
-
-if (properties.HasFlag(GattCharacteristicProperties.Write))
-{
-    GattReadResult gattResult = await characteristic.WriteValueAsync(;
-    if (gattResult.Status == GattCommunicationStatus.Success)
-    {
-        var reader = DataReader.FromBuffer(gattResult.Value);
-        byte[] input = new byte[reader.UnconsumedBufferLength];
-        reader.ReadBytes(input);
-        //Читаем input
-    }
-}*/
                             }
+                            catch { _watcher.Stop(); return; }
                         }
-                        else continue;
-
                     }
                 }
             }
         }
+            
+        private void SetTimer()
+        {
+            aTimer = new System.Timers.Timer(TimeSpan.FromSeconds(30).TotalMilliseconds);
+            aTimer.Elapsed += OnTimerEvent;
+            aTimer.AutoReset = true;
+            aTimer.Start();
+        }
+
+        private void OnTimerEvent(object sender, ElapsedEventArgs e)
+        {
+            Start(_namedevice, _macdevice, _services, _characteristic);
+        }
+
+        private void onBluetoothConnectionStatus(BluetoothLEDevice sender, object args)
+        {
+            if (sender.ConnectionStatus == BluetoothConnectionStatus.Disconnected)
+            {
+                if (aTimer != null)
+                {
+                    aTimer.Stop();
+                    aTimer.Dispose();
+                }
+                if (_bluetoothLeDevice != null)
+                {
+                    _bluetoothLeDevice.ConnectionStatusChanged -= onBluetoothConnectionStatus;
+                    _bluetoothLeDevice.Dispose();
+                }
+                isFindDevice = false;
+                _bluetoothLeDevice = null;
+                GC.Collect();
+                if (ConnectChange!= null) ConnectChange(this, false);
+                statlabelChange(this, "Отключено");
+            }
+            else if (sender.ConnectionStatus == BluetoothConnectionStatus.Connected)
+            {
+                statlabelChange(this, "Подключено");
+                _watcher.Stop();
+            }
+        }
+
         private async void Charac_ValueChangedAsync(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
             CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out byte[] data);
@@ -228,8 +195,7 @@ if (properties.HasFlag(GattCharacteristicProperties.Write))
             {
                 //Asuming Encoding is in ASCII, can be UTF8 or other!
                 dataFromReadResult = Encoding.ASCII.GetString(dataRead);
-                GetAsyncList.Add(Regex.Replace(dataFromReadResult, "[A-Za-z \n\r\0]", "").Replace('.', ','));
-                LastDim = Regex.Replace(dataFromReadResult, "[A-Za-z \n\r\0]", "").Replace('.', ',');
+                onLastDimention(this, double.Parse(Regex.Replace(dataFromReadResult, "[A-Za-z \n\r\0]", "").Replace('.', ',')));
 
                 ///"DATA FROM READ: " + dataFromReadResult);
             }
@@ -243,7 +209,7 @@ if (properties.HasFlag(GattCharacteristicProperties.Write))
 
         private void Watcher_Stopped(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementWatcherStoppedEventArgs args)
         {
-            GetAsyncConnect = false;
         }
+
     }
 }

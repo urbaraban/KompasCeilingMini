@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -16,10 +16,17 @@ using System.Windows.Controls;
 using System.Collections.Generic;
 
 using System.Windows.Threading;
-using System.Threading.Tasks;
 
-using BlueTest.BlueClass;
 using KompasLib.Tools;
+using System.Windows.Data;
+using BlueTest.BlueClass;
+using Windows.Devices.Enumeration;
+using System.Threading.Tasks;
+using Windows.Devices.Bluetooth;
+using System.Windows.Input;
+using System.Runtime.InteropServices;
+using System.Threading;
+using KompasLib.KompasTool;
 
 namespace KompasCeilingMini
 {
@@ -29,22 +36,43 @@ namespace KompasCeilingMini
     public partial class MainWindow : Window
     {
 
+        static Dispatcher dispatcher = System.Windows.Application.Current.Dispatcher;
+
+
         #region Custom declarations
 
-        private KmpsAppl api;
-        private BluetoothObserver observer;
-        private SQLTool sqltool = new SQLTool();
+        public static KmpsAppl API;
 
-        private bool clicado = false;
-        private Point lm = new Point();
+        public static int Comp = KompasCeilingMini.Properties.Settings.Default.stg_compensation_val;
 
-        public KmpsAppl API => api;
+        public static DefDataSet DefDataSet = new DefDataSet();
 
         #endregion Custom declarations
 
         public MainWindow()
         {
+            
             InitializeComponent();
+            DefDataSet.FillTable();
+            StatusLabel += StatusUpdate;
+            Number += NumberUpdate;
+            Suffix += SuffixUpdate;
+            CheckResize();
+        }
+
+        private void NumberUpdate(object sender, int e)
+        {
+            NumberUpDn.Value = e;
+        }
+
+        private void StatusUpdate(object sender, string e)
+        {
+            KmpStatLbl.Content = e;
+        }
+
+        private void SuffixUpdate(object sender, string e)
+        {
+            sufixBox.Text = e;
         }
 
 
@@ -54,9 +82,8 @@ namespace KompasCeilingMini
         {
             if (KmpsAppl.KompasAPI == null)
             {
-                api = new KmpsAppl(KompasCeilingMini.Properties.Settings.Default.CloseLastVal, KompasCeilingMini.Properties.Settings.Default.CloseLast);
-                api.ChangeDoc += new EventHandler<KmpsAppl>(ChangeDoc);
-                api.ConnectBoolEvent += new EventHandler<bool>(ConnectEvent);
+                KmpsAppl.ChangeDoc += KmpsAppl_ChangeDoc;
+                KmpsAppl.ConnectBoolEvent += new EventHandler<bool>(ConnectEvent);
 
                 if (KmpsAppl.KompasAPI != null)
                 {
@@ -68,17 +95,21 @@ namespace KompasCeilingMini
                     KmpStatLbl.Content = "Компас: Нет";
                 }
 
-                api.SelectDoc();
+                KmpsAppl.SelectDoc();
 
             }
             else
             {
-                api.ChangeDoc += new EventHandler<KmpsAppl>(ChangeDoc);
-                api.SelectDoc();
+                KmpsAppl.ChangeDoc += KmpsAppl_ChangeDoc;
+                KmpsAppl.SelectDoc();
             }
+
+           if (KmpsAppl.Doc. != null)
+              KmpsAppl.Doc.SelectDimenetion += new EventHandler<object>(SelectDimChange);
+
             void ConnectEvent(object sender, bool e)
             {
-                Dispatcher.Invoke(new Action(() =>
+                dispatcher.Invoke(new Action(() =>
                 {
                     if (e)
                     {
@@ -89,240 +120,30 @@ namespace KompasCeilingMini
                         KmpStatLbl.Content = "Компас: Нет";
                     }
                 }));
+                System.Threading.Thread.Sleep(50);
             }
         }
 
-        private void ChangeDoc(object sender, KmpsAppl e)
+        private void KmpsAppl_ChangeDoc(object sender, KmpsDoc e)
         {
-            Dispatcher.Invoke(new Action(() =>
+            dispatcher.Invoke(new Action(() =>
             {
                 UpdateForm(true);
+                KmpsAppl.Doc.ST.ChangeListDimention += ListDimentionChange;
             }));
+            System.Threading.Thread.Sleep(50);
         }
 
-
-        private void UpdateForm(bool First = true)
+        private void SelectDimChange(object sender, object e)
         {
-            if((KmpsAppl.KompasAPI != null)&&(KmpsAppl.Appl.ActiveDocument != null))
+            dispatcher.Invoke(new Action(() =>
             {
-                if (KmpsAppl.Appl.ActiveDocument.Name != string.Empty)
-                    SaveStatLabel.Content = KmpsAppl.Appl.ActiveDocument.Name;
-                else SaveStatLabel.Content = "Новый документ";
-
-
-                IVariable7 var;
-
-                if (First == true)
-                {
-                    if (!api.Doc.D71.IsVariableNameValid("Number"))
-                    {
-                        facturaListCheck.Items.Clear();
-
-                        var = api.Doc.D71.Variable[false, "Number"];
-                        if (var.Note != "Number")
-                        {
-                            string[] numberList = var.Note.Split(';');
-                            for (int i = 0; i < numberList.Length; i++) facturaListCheck.Items.Add(numberList[i]);
-                            facturaListCheck.SelectedIndex = 0;
-                        }
-                        else
-                        {
-                            var.Note = "1";
-                            api.Doc.D71.UpdateVariables();
-                        }
-                    }
-                    else
-                    {
-                        facturaListCheck.Items.Clear();
-                        api.Doc.D71.AddVariable("Number", 1, "Номера");
-                        var = api.Doc.D71.Variable[false, "Number"];
-                        var.Note = "1";
-                        api.Doc.D71.UpdateVariables();
-                        facturaListCheck.Items.Add("1");
-                        facturaListCheck.SelectedIndex = 0;
-                    }
-
-                    mashtabChek.IsChecked = false;
-                }
-
-                string index = facturaListCheck.SelectedItem.ToString();
-
-
-                //Number
-                if (api.Doc.D71.IsVariableNameValid("Number")) api.Doc.D71.AddVariable("Number", 0, "Площадь");
-                var = api.Doc.D71.Variable[false, "Number"];
-                NumberUpDn.Value = (int)var.Value;
-                //suffix
-                var = api.Doc.D71.Variable[false, "Number"];
-                sufixBox.Text = var.Note;
-
-                //площадь
-                if (api.Doc.D71.IsVariableNameValid("Sqare" + index)) api.Doc.D71.AddVariable("Sqare" + index, 0, "Площадь");
-                var = api.Doc.D71.Variable[false, "Sqare" + index];
-                SqareBox.Text = var.Value.ToString();
-
-                //площадь с усадкой
-                if (api.Doc.D71.IsVariableNameValid("SqareU" + index)) api.Doc.D71.AddVariable("SqareU" + index, 0, "ПлощадьУ");
-                var = api.Doc.D71.Variable[false, "SqareU" + index];
-                SqareUBox.Text = var.Value.ToString();
-
-                //периметр
-                if (api.Doc.D71.IsVariableNameValid("Perimetr" + index)) api.Doc.D71.AddVariable("Perimetr" + index, 0, "Perimetr");
-                var = api.Doc.D71.Variable[false, "Perimetr" + index];
-                PerimetrBox.Text = var.Value.ToString();
-
-                //периметрУ
-                if (api.Doc.D71.IsVariableNameValid("PerimetrU" + index)) api.Doc.D71.AddVariable("PerimetrU" + index, 0, "PerimetrU");
-                //периметр прямых
-                if (api.Doc.D71.IsVariableNameValid("LineP" + index)) api.Doc.D71.AddVariable("LineP" + index, 0, "LineP");
-                var = api.Doc.D71.Variable[false, "LineP" + index];
-
-                //периметр кривых
-                if (api.Doc.D71.IsVariableNameValid("CurveP" + index)) api.Doc.D71.AddVariable("CurveP" + index, 0, "CurveP");
-                var = api.Doc.D71.Variable[false, "CurveP" + index];
-
-                //углы
-                if (api.Doc.D71.IsVariableNameValid("Angle")) api.Doc.D71.AddVariable("Angle", 0, "Angle");
-                var = api.Doc.D71.Variable[false, "Angle"];
-                AngUpDn.Value = (byte)var.Value;
-
-                //шов
-                if (api.Doc.D71.IsVariableNameValid("Shov" + index)) api.Doc.D71.AddVariable("Shov" + index, 0, "Shov");
-                var = api.Doc.D71.Variable[false, "Shov" + index];
-                ShovBox.Text = var.Value.ToString();
-
-
-                //XGabarit
-                if (api.Doc.D71.IsVariableNameValid("XGabarit" + index)) api.Doc.D71.AddVariable("XGabarit" + index, 0, "XGabarit");
-                var = api.Doc.D71.Variable[false, "XGabarit" + index];
-                WidthUpDn.Value = (var.Value * ((100 - api.Doc.Variable.Give("koefX", string.Empty)) / 100));
-
-                //YGabarit
-                if (api.Doc.D71.IsVariableNameValid("YGabarit" + index)) api.Doc.D71.AddVariable("YGabarit" + index, 0, "YGabarit");
-                var = api.Doc.D71.Variable[false, "YGabarit" + index];
-                HeightUpDn.Value = (var.Value * ((100 - api.Doc.Variable.Give("koefY", string.Empty)) / 100));
-
-                //Xcrd
-                if (api.Doc.D71.IsVariableNameValid("Xcrd" + index)) api.Doc.D71.AddVariable("Xcrd" + index, 0, "Xcrd");
-                var = api.Doc.D71.Variable[false, "Xcrd" + index];
-
-                //Ycrd
-                if (api.Doc.D71.IsVariableNameValid("Ycrd" + index)) api.Doc.D71.AddVariable("Ycrd" + index, 0, "Ycrd");
-                var = api.Doc.D71.Variable[false, "Ycrd" + index];
-
-
-                //X
-                if (api.Doc.D71.IsVariableNameValid("koefX")) api.Doc.D71.AddVariable("koefX", 7, "Unchecked");
-                var = api.Doc.D71.Variable[false, "koefX"];
-                XUpDn.Value = var.Value;
-                if (var.Note == "koefX") api.Doc.Variable.UpdateNote("koefX", "Unchecked", "");
-                //Статус усадки;
-                if (First)
-                {
-                    if (var.Note == "Checked") mashtabChek.IsChecked = true;
-                    else mashtabChek.IsChecked = false;
-                }
-
-                //Y
-                if (api.Doc.D71.IsVariableNameValid("koefY")) api.Doc.D71.AddVariable("koefY", 7, "koefY");
-                var = api.Doc.D71.Variable[false, "koefY"];
-                YUpDn.Value = var.Value;
-
-
-                //фотопечать
-                if (api.Doc.D71.IsVariableNameValid("photo" + index)) api.Doc.D71.AddVariable("photo" + index, 0, "photo");
-                var = api.Doc.D71.Variable[false, "photo" + index];
-                FpCalc.Value = (decimal)var.Value;
-
-                //длина
-                if (api.Doc.D71.IsVariableNameValid("lenth" + index)) api.Doc.D71.AddVariable("lenth" + index, 0, "lenth");
-                var = api.Doc.D71.Variable[false, "lenth" + index];
-
-                //фактура
-                if (api.Doc.D71.IsVariableNameValid("factura" + index)) api.Doc.D71.AddVariable("factura" + index, -1, "factura");
-                var = api.Doc.D71.Variable[false, "factura" + index];
-
-                double sizeX = api.Doc.Variable.Give("XGabarit", index) * ((100 - api.Doc.Variable.Give("koefX", string.Empty)) / 100);
-                double sizeY = api.Doc.Variable.Give("YGabarit", index) * ((100 - api.Doc.Variable.Give("koefY", string.Empty)) / 100);
-                SQLFacturaRefresh("SELECT IDFactura, CONCAT(Name,' ',Width) AS NameW FROM dbo.Factura WHERE Width >=" + Math.Min(sizeX*0.97, sizeY*0.97).ToString().Replace(',', '.') + " ORDER BY NumberPP");
-                if (FacturaCombo.Items.Count == 0)
-                SQLFacturaRefresh("SELECT IDFactura, CONCAT(Name,' ',Width) AS NameW FROM dbo.Factura ORDER BY NumberPP");
-
-
-                //цвет
-                if (api.Doc.D71.IsVariableNameValid("color" + index)) api.Doc.D71.AddVariable("color" + index, -1, "color");
-                var = api.Doc.D71.Variable[false, "color" + index];
-                SQLFacturaColorRefresh();
-
-                if (var.Note == "color" + index) api.Doc.Variable.UpdateNote("color", ColorCombo.Text, index);
-
-                //вырез
-                if (api.Doc.D71.IsVariableNameValid("cut" + index)) api.Doc.D71.AddVariable("cut" + index, 0, "вырез");
-                var = api.Doc.D71.Variable[false, "cut" + index];
-                CutBox.Text = var.Value.ToString();
-
-                //Комментарий 1
-                if (api.Doc.D71.IsVariableNameValid("Comment1")) api.Doc.D71.AddVariable("Comment1", 0, "Comment1");
-                var = api.Doc.D71.Variable[false, "Comment1"];
-                paramBox_1.Text = var.Note;
-
-                //Комментарий 2
-                if (api.Doc.D71.IsVariableNameValid("Comment2")) api.Doc.D71.AddVariable("Comment2", 0, "Comment2");
-                var = api.Doc.D71.Variable[false, "Comment2"];
-                paramBox_2.Text = var.Note;
-
-
-
-
-
-            }
-        }
-
-        private void SQLFacturaRefresh(string sqlcommand)
-        {
-            api.someFlag = false;
-            FacturaCombo.ItemsSource = null;
-            FacturaCombo.Items.Clear();
-
-            DataSet ds = sqltool.ComboDataSet(sqlcommand, "Factura", KompasCeilingMini.Properties.Settings.Default.EasyCeilingConnectionString);
-
-            FacturaCombo.DisplayMemberPath = "NameW";
-            FacturaCombo.SelectedValuePath = "IDFactura";
-            FacturaCombo.ItemsSource = ds.Tables["Factura"].DefaultView;
-
-            FacturaCombo.SelectedValue = api.Doc.Variable.Give("factura", facturaListCheck.SelectedItem.ToString());
-
-            api.someFlag = true;
-            if (ColorCombo.SelectedIndex < -1)
-                FacturaCombo.SelectedIndex = 0;
-        }
-
-        private void SQLFacturaColorRefresh()
-        {
-            if (FacturaCombo.SelectedIndex > -1)
-            {
-
-
-                ColorCombo.ItemsSource = null;
-                api.someFlag = false;
-                ColorCombo.Items.Clear();
-
-                DataSet ds = sqltool.ComboDataSet("SELECT IDFacCol, Name FROM dbo.FactruaColor WHERE IDFactura=" + FacturaCombo.SelectedValue + " ORDER BY NumberPP", "FactruaColor", KompasCeilingMini.Properties.Settings.Default.EasyCeilingConnectionString);
-
-
-                ColorCombo.DisplayMemberPath = "Name";
-                ColorCombo.SelectedValuePath = "IDFacCol";
-                ColorCombo.ItemsSource = ds.Tables["FactruaColor"].DefaultView;
-
-
-                ColorCombo.SelectedValue = api.Doc.Variable.Give("color", facturaListCheck.SelectedItem.ToString());
-
-                api.someFlag = true;
-
-                if (ColorCombo.SelectedIndex < 0)
-                    ColorCombo.SelectedIndex = 0;
-            }
-
+                AddingLineToggle.IsChecked = false;
+                IDrawingObject lineDimension = (IDrawingObject)e;
+                VariableDimentionlistBox.SelectedValue = lineDimension.Reference;
+                DimVariableBox.Text = Math.Round(SizeTool.ReturnValVariableDim((IDrawingObject1)e), 2).ToString();
+            }));
+            System.Threading.Thread.Sleep(50);
         }
 
         #endregion
@@ -331,9 +152,9 @@ namespace KompasCeilingMini
 
         private void NewFileVoid()
         {
-            if (api != null)
+            if (API != null)
             {
-                if (!api.CreateDoc())
+                if (!API.CreateDoc())
                     MessageBox.Show("Файл не создался");
             }
             else
@@ -348,18 +169,18 @@ namespace KompasCeilingMini
 
             openFileDialog.Filter = "Kompas (.frw)|*.frw|All Files (*.*)|*.*";
 
-            if (KompasCeilingMini.Properties.Settings.Default.WorkFolder == null || KompasCeilingMini.Properties.Settings.Default.WorkFolder == "")
+            if (KompasCeilingMini.Properties.Settings.Default.stg_work_folders == null || KompasCeilingMini.Properties.Settings.Default.stg_work_folders == "")
             {
                 System.Windows.Forms.FolderBrowserDialog WorkFolderSlct = new System.Windows.Forms.FolderBrowserDialog();
 
                 if (WorkFolderSlct.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    KompasCeilingMini.Properties.Settings.Default.WorkFolder = WorkFolderSlct.SelectedPath;
+                    KompasCeilingMini.Properties.Settings.Default.stg_work_folders = WorkFolderSlct.SelectedPath;
                     KompasCeilingMini.Properties.Settings.Default.Save();
                 }
             }
 
-            openFileDialog.InitialDirectory = KompasCeilingMini.Properties.Settings.Default.WorkFolder;
+            openFileDialog.InitialDirectory = KompasCeilingMini.Properties.Settings.Default.stg_work_folders;
             openFileDialog.FileName = null;
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -380,8 +201,8 @@ namespace KompasCeilingMini
 
                         case (int)DocType.lt_DocSheetStandart:  //2d документы
                         case (int)DocType.lt_DocFragment:
-                            api.Doc.D5 = (ksDocument2D)KmpsAppl.KompasAPI.Document2D();
-                            if (api.Doc.D5 != null)
+                            KmpsAppl.Doc.D5 = (ksDocument2D)KmpsAppl.KompasAPI.Document2D();
+                            if (KmpsAppl.Doc.D5 != null)
                                 Process.Start(openFileDialog.FileName);
 
                             break;
@@ -399,328 +220,7 @@ namespace KompasCeilingMini
             }
         }
 
-        #region CalcAll
-        private void GetContour(string index, bool Usadka = false, bool cursor = true, reference refContour = 0)
-        {
-            if (KmpsAppl.KompasAPI != null)
-            {
-                #region получение контура
-                double x = 0, y = 0;
-                RequestInfo info = (RequestInfo)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_RequestInfo);
 
-
-                //Ищем или находим макрообъект по индексу потолка
-                IMacroObject macroObject = api.Doc.Macro.FindCeilingMacro(index);
-                if (macroObject == null) macroObject = api.Doc.Macro.MakeCeilingMacro(index);
-                else if (cursor)
-                {
-                    api.Doc.Macro.RemoveCeilingMacro(index);
-                    macroObject = api.Doc.Macro.MakeCeilingMacro(index);
-                }
-
-                if (refContour == 0)
-                {
-                    if (cursor)
-                    {
-                        api.Doc.D5.ksCursor(info, ref x, ref y, 0);
-                        int refEncloseContours = api.Doc.D5.ksMakeEncloseContours(0, x, y);
-                        if (refEncloseContours != 0)
-                            api.Doc.Macro.AddCeilingMacro(refEncloseContours, index);  //Добавляем ksMakeEncloseContours
-                        else
-                            KmpsAppl.KompasAPI.ksMessage("Не найден замкнутый контур");
-
-                        refContour = api.Doc.Macro.GiveRefFromMacro(macroObject.Reference, "F");
-                    }
-                    else
-                    {
-                        refContour = api.Doc.Macro.GiveRefFromMacro(macroObject.Reference, "F");
-                    }
-                }
-                else
-                {
-                    api.Doc.Macro.RemoveCeilingMacro(index);
-                    macroObject = api.Doc.Macro.MakeCeilingMacro(index);
-                    api.Doc.Macro.AddCeilingMacro(refContour, index);
-                    refContour = api.Doc.Macro.GiveRefFromMacro(macroObject.Reference, "F");
-                }
-                #endregion
-                if (refContour != 0)
-                    CalcAll(macroObject, Usadka);  //Считает все
-                UpdateForm(false);
-            }
-            else MessageBox.Show(this, "Объект не захвачен", "Сообщение");
-
-            void CalcAll(IMacroObject macroObject1, bool usadka)
-            {
-                if (usadka)
-                {
-                    api.Doc.Variable.Update("PerimetrU", 0, index);
-                    if (facturaListCheck.SelectedIndex == 0) api.Doc.Variable.Update("Angle", 0, string.Empty);
-                }
-                else
-                {
-                    api.Doc.Variable.Update("Perimetr", 0, index);
-                    api.Doc.Variable.Update("LineP", 0, index);
-                    api.Doc.Variable.Update("CurveP", 0, index);
-                    api.Doc.Variable.Update("Shov", 0, index);
-                    api.Doc.Variable.Update("cut", 0, index);
-                    if (facturaListCheck.SelectedIndex == 0) api.Doc.Variable.Update("Angle", 0, string.Empty);
-                }
-
-                ksInertiaParam inParam = (ksInertiaParam)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_InertiaParam);
-                ksIterator Iterator1 = (ksIterator)KmpsAppl.KompasAPI.GetIterator();
-                Iterator1.ksCreateIterator(ldefin2d.ALL_OBJ, macroObject1.Reference);
-                double SqareMain = 0;
-                int position = facturaListCheck.Items.IndexOf(index);
-                int MainRef = 0;
-                int Count = 0;
-                //Перебираем кривые в поиске самой большой.
-                reference refContour1 = Iterator1.ksMoveIterator("F");
-                while (refContour1 != 0)
-                {
-                    api.Mat.ksCalcInertiaProperties(refContour1, inParam, 3);
-                    if (SqareMain < inParam.F)
-                    {
-                        SqareMain = inParam.F; //Выбираем самую большую
-                        MainRef = refContour1;
-                    }
-                    Count++;
-                    refContour1 = Iterator1.ksMoveIterator("N");
-                }
-                //
-                //Получить габарит mainRef
-                //
-                MakeGabarit(MainRef, (bool)NoMashtab.IsChecked);
-
-                //
-                //Начинаем перебор контуров со всем что есть
-                //
-                //Заходим в первый контур
-
-
-                refContour1 = Iterator1.ksMoveIterator("F");
-                while (refContour1 != 0)
-                {
-
-                    double lineTemp = 0, curveTemp = 0, shovTemp = 0, cut = 0, angleTemp = api.Doc.Variable.Give("Angle", string.Empty);
-                    IContour contour1 = api.Doc.Macro.GiveContour(refContour1);
-                    if (refContour1 != MainRef)
-                    {
-                        api.Mat.ksCalcInertiaProperties(refContour1, inParam, 3);   //Если он не главный, то вычитаем его площадь из главного.
-                        SqareMain -= inParam.F;                                 //Вычитаем из главной площади
-                        perriContour(contour1, ref cut, ref cut, ref angleTemp);               //Считаем предполагаем вырез
-                    }
-                    else perriContour(contour1, ref lineTemp, ref curveTemp, ref angleTemp);
-                    //Функция расчета периметра
-                    void perriContour(IContour contour, ref double Line, ref double Curve, ref double Angle)
-                    {
-                        if (contour != null)
-                        {
-                            for (int i = 0; i < contour.Count; i++)
-                            {
-                                IContourSegment pDrawObj = (IContourSegment)contour.Segment[i];
-                                // Получить тип объекта
-                                // В зависимости от типа вывести сообщение для данного типа объектов
-                                try
-                                {
-                                    IContourLineSegment contourLineSegment = (IContourLineSegment)pDrawObj;
-                                    Line += contourLineSegment.Length;
-                                    Angle += 1;
-                                }
-                                catch
-                                {
-                                    ICurve2D contourLineSegment = (ICurve2D)pDrawObj.Curve2D;
-                                    Curve += contourLineSegment.Length;
-                                    if (i > 0)
-                                        if (contour.Segment[i - 1].Type == KompasAPIObjectTypeEnum.ksObjectContourLineSegment)
-                                            Angle += 1;
-                                }
-                            }
-                        }
-                    }
-
-
-                    api.ProgressBar.Start(0, facturaListCheck.Items.Count, "Считаем контур ", true);
-
-                    for (int i = 0; i < facturaListCheck.Items.Count; i++)           //Стартуем проход по потолкам
-                    {
-
-                        api.ProgressBar.SetProgress(i, "Считаем контур " + i, false);
-                        if (i == position)
-                            continue;                            //Если это тот же потолок то выходим.
-                        else
-                        {
-                            IMacroObject macroObject2 = api.Doc.Macro.FindCeilingMacro(facturaListCheck.Items[i].ToString());
-                            if (macroObject2 != null)
-                            {
-                                ksIterator Iterator2 = (ksIterator)KmpsAppl.KompasAPI.GetIterator();
-                                Iterator2.ksCreateIterator(ldefin2d.ALL_OBJ, macroObject2.Reference);
-
-                                //Заходим во второй контур
-                                reference refContour2 = Iterator2.ksMoveIterator("F");
-                                while (refContour2 != 0)
-                                {
-                                    IContour contour2 = api.Doc.Macro.GiveContour(refContour2);
-                                    ksDynamicArray arrayCurve = (ksDynamicArray)KmpsAppl.KompasAPI.GetDynamicArray(ldefin2d.POINT_ARR);
-                                    if (api.Mat.ksIntersectCurvCurv(contour1.Reference, contour2.Reference, arrayCurve) == 1)
-                                    {
-                                        angleTemp -= 1;
-                                        int step = (int)arrayCurve.ksGetArrayCount();
-                                        ksMathPointParam[] points = new ksMathPointParam[step];
-
-                                        for (int j = 0; j < step; j++)
-                                        {
-                                            points[j] = (ksMathPointParam)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_MathPointParam);
-                                            arrayCurve.ksGetArrayItem(j, points[j]);
-                                        }
-
-                                        double lenthTemp = 0;
-
-                                        //Сравниваем сегменты контура с другим контуром (по сегментно)
-                                        for (int j = 0; j < contour1.Count; j++)
-                                        {
-                                            IContourSegment segment = (IContourSegment)contour1.Segment[j];
-
-                                            for (int k = 0; k < contour2.Count; k++)
-                                            {
-                                                IContourSegment segment2 = (IContourSegment)contour2.Segment[k];
-
-                                                //Получаем крайние точки пересечения
-                                                double[] intersecArr = segment.Curve2D.Intersect(segment2.Curve2D);
-                                                if (intersecArr != null)
-                                                    if (intersecArr.Length > 3)
-                                                    {
-                                                        //Узнаем длинну
-                                                        double lenthTemp2 = segment.Curve2D.GetDistancePointPoint(intersecArr[0], intersecArr[1], intersecArr[2], intersecArr[3]);
-                                                        lenthTemp += lenthTemp2;
-
-                                                        //Если она больше, то нет смысла сравнивать дальше.
-                                                        if (lenthTemp2 >= segment.Curve2D.Length)
-                                                            break;
-                                                    }
-                                            }
-                                        }
-
-
-                                        shovTemp += lenthTemp;
-
-                                        arrayCurve.ksDeleteArray();
-                                        if (i < position)
-                                        {
-                                            if (Math.Round(curveTemp - shovTemp, 2) < 0) { lineTemp += curveTemp - shovTemp; curveTemp = 0; }
-                                            else curveTemp -= shovTemp;
-                                            shovTemp = 0;
-                                        }
-                                    }
-                                    refContour2 = Iterator2.ksMoveIterator("N"); //Двигаем итератор 2
-
-                                    arrayCurve.ksDeleteArray();
-                                }
-                                Iterator2.ksDeleteIterator(); //Удаляем итератор 2
-                            }
-                        }
-                    }
-                    //получили шов и вычитаем его из предыдущих параметров периметра или длинны выреза.
-
-                    shovTemp = Math.Round(shovTemp, 2);
-                    curveTemp = Math.Round(curveTemp, 2);
-                    lineTemp = Math.Round(lineTemp, 2);
-
-                    if (refContour1 != MainRef) cut -= shovTemp;
-                    else
-                    {
-                        if (curveTemp - shovTemp <= 0) { lineTemp += curveTemp - shovTemp; curveTemp = 0; }
-                        else curveTemp -= shovTemp;
-                    }
-
-                    if (usadka)
-                    {
-                        api.Doc.Variable.Add("PerimetrU", Math.Round((lineTemp + curveTemp) / 100, 2), index);
-                        api.Doc.Variable.Add("Angle", angleTemp, string.Empty);
-                    }
-                    else
-                    {
-                        api.Doc.Variable.Add("Perimetr", Math.Round((lineTemp + curveTemp) / 100, 2), index);
-                        api.Doc.Variable.Add("LineP", Math.Round(lineTemp / 100, 2), index);
-                        api.Doc.Variable.Add("CurveP", Math.Round(curveTemp / 100, 2), index);
-                        api.Doc.Variable.Add("Shov", Math.Round(shovTemp / 100, 2), index);
-                        api.Doc.Variable.Add("cut", Math.Round(cut / 100, 2), index);
-                        api.Doc.Variable.Add("Angle", angleTemp, string.Empty);
-                    }
-
-                    refContour1 = Iterator1.ksMoveIterator("N"); //Двигаем итератор 1
-                }
-                Iterator1.ksDeleteIterator(); //Удаляем итератор 1 после полного перебора
-                if (usadka) api.Doc.Variable.Update("SqareU", Math.Round(SqareMain / 10000, 2), index);
-                else api.Doc.Variable.Update("Sqare", Math.Round(SqareMain / 10000, 2), index);
-
-                api.ProgressBar.Stop("Закончили", true);
-
-                void MakeGabarit(reference objRef, bool garpun)
-                {
-                    ksRectangleParam recPar = (ksRectangleParam)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_RectangleParam);
-                    ksRectParam spcGabarit = (ksRectParam)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_RectParam);
-                    if (api.Doc.D5.ksGetObjGabaritRect(objRef, spcGabarit) == 1)
-                    {
-                        ksMathPointParam mathBop = spcGabarit.GetpBot();
-                        ksMathPointParam mathTop = spcGabarit.GetpTop();
-                        double x = mathBop.x;
-                        double y = mathBop.y;
-                        double dx = mathTop.x;
-                        double dy = mathTop.y;
-                        double sizeX = Math.Round(Math.Abs(x - dx), 2);
-                        double sizeY = Math.Round(Math.Abs(y - dy), 2);
-
-                        if (FacturaCombo.SelectedIndex == -1) FacturaCombo.SelectedIndex = 0;
-
-                        double width = double.Parse(SqlReturnValue("SELECT TOP 1 Width FROM dbo.Factura WHERE IDFactura=" + api.Doc.Variable.Give("factura", index), "Width"));
-
-                        api.Doc.Variable.Update("Xcrd", x, index);
-                        api.Doc.Variable.Update("Ycrd", y, index);
-
-                        if (!usadka)
-                        {
-                            api.Doc.Variable.Update("XGabarit", sizeX, index);
-                            api.Doc.Variable.Update("YGabarit", sizeY, index);
-                        }
-
-                        if (usadka || !garpun)
-                        {
-                            IVariable7 lenth = api.Doc.D71.Variable[false, "lenth" + index];
-
-                            recPar.Init();
-                            recPar.x = x;
-                            recPar.y = y;
-                            double Dopusk = (double)usadkaDopusk.Value / 100 + 1;
-
-                            if ((sizeX / width) <= 1 * Dopusk && (sizeX / width) > (sizeY / width) || (sizeY > width * Dopusk))
-                            {
-                                lenth.Value = sizeY;
-                                if (y < dy) recPar.height = sizeY;
-                                else recPar.height = -sizeY;
-                                if (x < dx) recPar.width = width;
-                                else recPar.width = -width;
-                            }
-                            else
-                            {
-                                lenth.Value = sizeX;
-                                if (y < dy) recPar.height = width;
-                                else recPar.height = -width;
-                                if (x < dx) recPar.width = sizeX;
-                                else recPar.width = -sizeX;
-                            }
-
-                            api.Doc.D71.UpdateVariables();
-                        }
-                        // api.Doc.D5.ksRectangle(recPar, 0);
-
-                        //SQLFacturaRefresh("SELECT IDFactura, CONCAT(Name,' ',Width) AS NameW FROM dbo.Factura WHERE Width >=" + Math.Min(sizeX, sizeY).ToString().Replace(',','.') + " ORDER BY NumberPP");
-                    }
-                }
-            }
-
-        }
-        #endregion
 
 
         private string SqlReturnValue(string sqlCmd, string columName)
@@ -786,140 +286,36 @@ namespace KompasCeilingMini
         {
             DateTime date = DateTime.Now;
             if ((KompasCeilingMini.Properties.Settings.Default.lastDate < date.Month) && (date.Month != 1))
-            {
                 if (MessageBox.Show("Новый месяц!\n Сменим папку?", "Внимание", MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.OK)
-                {
-                    System.Windows.Forms.FolderBrowserDialog WorkFolderSlct = new System.Windows.Forms.FolderBrowserDialog();
+                    FolderSelectDialog();
 
-                    if (WorkFolderSlct.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                    {
-                        KompasCeilingMini.Properties.Settings.Default.WorkFolder = WorkFolderSlct.SelectedPath;
-                        KompasCeilingMini.Properties.Settings.Default.lastDate = date.Month;
-                        KompasCeilingMini.Properties.Settings.Default.Save();
-                    }
-                }
-            }
             targetApi();
         }
 
-
-        private void FacturaListCheck_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void FolderSelectDialog()
         {
-            if (facturaListCheck.Items.Count > 0)
-                if (KmpsAppl.KompasAPI != null)
-                {
-                    if (facturaListCheck.SelectedIndex < 0) facturaListCheck.SelectedIndex = 0;
+            DateTime date = DateTime.Now;
 
-                    IVariable7 var = api.Doc.D71.Variable[false, "Number"];
-                    var.Note = GiveNumberStroke();
-                    api.Doc.D71.UpdateVariables();
-                    UpdateForm(false);
+            System.Windows.Forms.FolderBrowserDialog WorkFolderSlct = new System.Windows.Forms.FolderBrowserDialog();
 
-                    //Возвращает строку всех фактуры
-                    string GiveNumberStroke()
-                    {
-                        string number = facturaListCheck.Items[0].ToString();
-                        for (int i = 1; i < facturaListCheck.Items.Count; i++) number += ";" + facturaListCheck.Items[i].ToString();
-                        return number;
-                    }
-                }
+            if (WorkFolderSlct.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                KompasCeilingMini.Properties.Settings.Default.stg_work_folders = WorkFolderSlct.SelectedPath;
+                KompasCeilingMini.Properties.Settings.Default.lastDate = date.Month;
+                KompasCeilingMini.Properties.Settings.Default.Save();
+            }
         }
+
 
         private void KsContrForm_Closed(object sender, EventArgs e)
         {
             Environment.Exit(0);
         }
 
-        private void FacturaCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if ((api.someFlag) && (KmpsAppl.KompasAPI != null) && (FacturaCombo.SelectedIndex > -1))
-            {
-                api.Doc.Variable.Update("factura", double.Parse(((DataRowView)FacturaCombo.SelectedItem).Row["IDFactura"].ToString()), facturaListCheck.SelectedItem.ToString());
-                api.Doc.Variable.UpdateNote("factura", ((DataRowView)FacturaCombo.SelectedItem).Row["NameW"].ToString(), facturaListCheck.SelectedItem.ToString());
-                SQLFacturaColorRefresh();
-                if (ColorCombo.SelectedIndex > -1)
-                {
-                    api.Doc.Variable.Update("color", double.Parse(((DataRowView)ColorCombo.SelectedItem).Row["IDFacCol"].ToString()), facturaListCheck.SelectedItem.ToString());
-                    api.Doc.Variable.UpdateNote("color", ((DataRowView)ColorCombo.SelectedItem).Row["Name"].ToString(), facturaListCheck.SelectedItem.ToString());
-                }
-            }
-        }
-
-
-        private void PlusFacturaBtn_Copy_Click(object sender, RoutedEventArgs e)
-        {
-            if (facturaListCheck.Items.Count > 1)
-            {
-                api.Doc.Variable.Clear(facturaListCheck.SelectedItem.ToString());
-                api.Doc.Macro.RemoveCeilingMacro(facturaListCheck.SelectedItem.ToString());
-                facturaListCheck.Items.Remove(facturaListCheck.SelectedItem);
-            }
-        }
-
-        private void PlusFacturaBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (api.Doc.D71 != null)
-            {
-                facturaListCheck.Items.Add(facturaListCheck.Items.Count + 1);
-
-                {
-                    IVariable7 var = api.Doc.D71.Variable[false, "Number"];
-                    var.Note = GiveNumberStroke();
-                    api.Doc.D71.UpdateVariables();
-                }
-
-                facturaListCheck.SelectedIndex = facturaListCheck.Items.Count - 1;
-
-                string GiveNumberStroke()
-                {
-                    string number = facturaListCheck.Items[0].ToString();
-                    for (int i = 1; i < facturaListCheck.Items.Count; i++)
-                        number += ";" + facturaListCheck.Items[i].ToString();
-                    return number;
-                }
-            }
-        }
-
-
-        private void MashtabChek_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (e.RightButton == System.Windows.Input.MouseButtonState.Pressed)
-                mashtabChek.IsChecked = !mashtabChek.IsChecked;
-            else if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
-            {
-
-            }
-        }
-
-        private void SizeCheks_Click(object sender, RoutedEventArgs e)
-        {
-            KompasCeilingMini.Properties.Settings.Default.SetSize = (bool)SizeCheks.IsChecked;
-            KompasCeilingMini.Properties.Settings.Default.Save();
-        }
-
-        private void CalcAllBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (KmpsAppl.KompasAPI != null)
-            {
-                if (facturaListCheck.SelectedIndex > 0) ReCalcBtn.Background = Brushes.Yellow;
-                GetContour(facturaListCheck.SelectedItem.ToString(), (bool)mashtabChek.IsChecked);
-                KmpsAppl.Appl.StopCurrentProcess();
-            }
-            else
-            {
-                MessageBox.Show(this, "Объект не захвачен", "Сообщение");
-            }
-        }
-
         //выбрать рабочую папку
         private void WorkFolder_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.FolderBrowserDialog WorkFolderSlct = new System.Windows.Forms.FolderBrowserDialog();
-            if (WorkFolderSlct.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                KompasCeilingMini.Properties.Settings.Default.WorkFolder = WorkFolderSlct.SelectedPath;
-                KompasCeilingMini.Properties.Settings.Default.Save();
-            }
+            FolderSelectDialog();
         }
 
         private void Menu_NewFile_Click(object sender, RoutedEventArgs e)
@@ -937,42 +333,40 @@ namespace KompasCeilingMini
         {
             string oldName = string.Empty;
 
-            if ((SqareUBox.Text == string.Empty) || (SqareUBox.Text == "0"))
+           /*if ((SqareUBox.Text == string.Empty) || (SqareUBox.Text == "0"))
             {
                 MessageBox.Show("Не проставленна площадь по усадке (красным)");
-                SqareUBox.Background = Brushes.Pink;
                 return;
-            }
+            }*/
 
-            if (api != null)
+            if (API != null)
             {
-                ItemCollection IC = facturaListCheck.Items;
                 string name = string.Empty;
 
                 //Если номера не совпадают, то предлагаем сохранить с новым
-                if (NumberUpDn.Value != api.Doc.Variable.Give("Number", string.Empty))
+                if (NumberUpDn.Value != KVariable.Give("Number", string.Empty))
                 {
-                    if (MessageBox.Show("Сохраняем с новым номером " + NumberUpDn.Text + "?", "Внимание", MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK)
+                    if (MessageBox.Show("Сохраняем с новым номером " + NumberUpDn.Value + "?", "Внимание", MessageBoxButton.OKCancel, MessageBoxImage.Warning) == MessageBoxResult.OK)
                     {
                         KompasCeilingMini.Properties.Settings.Default.ZkzLastNumber = (int)NumberUpDn.Value;
                         KompasCeilingMini.Properties.Settings.Default.Save();
-                        name = api.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, facturaListCheck.Items, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+                        name = KmpsAppl.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, CeilingItems, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
                     }
 
                     else return;
                 }
                 //Если имя пустое а мы сохраняем компас согласно настройкам
-                else if ((api.Doc.D7.Name != string.Empty) && ((bool)kmpsCheckBox.IsChecked == true))
+                else if ((KmpsAppl.Doc.D7.Name != string.Empty) && (KompasCeilingMini.Properties.Settings.Default.stg_frw_check))
                 {
                     //Если имя равно генирруемому
-                    if (api.Doc.D7.Name.Substring(0, api.Doc.D7.Name.Length - 4) == api.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, IC, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty))
+                    if (KmpsAppl.Doc.D7.Name.Substring(0, KmpsAppl.Doc.D7.Name.Length - 4) == KmpsAppl.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, CeilingItems, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty))
                         //То используем как есть
-                        name = api.Doc.D7.Name.Substring(0, api.Doc.D7.Name.Length - 4);
+                        name = KmpsAppl.Doc.D7.Name.Substring(0, KmpsAppl.Doc.D7.Name.Length - 4);
                     else
                     {
                         //Нет — делаем новое.
-                        oldName = api.Doc.D7.PathName;
-                        name = api.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, IC, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+                        oldName = KmpsAppl.Doc.D7.PathName;
+                        name = KmpsAppl.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, CeilingItems, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
                     }
                 }
 
@@ -981,11 +375,11 @@ namespace KompasCeilingMini
                     //Если текущий номер уже сохранян как использованный
                     if ((int)NumberUpDn.Value <= KompasCeilingMini.Properties.Settings.Default.ZkzLastNumber)
                     {
-                        if (MessageBox.Show("Вы уже использовали номер " + NumberUpDn.Text.Split('/', '-')[0] + ", или меньше\nДалее?", "Внимание", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                        if (MessageBox.Show("Вы уже использовали номер " + NumberUpDn.Value.ToString().Split('/', '-')[0] + ", или меньше\nДалее?", "Внимание", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                         {
                             KompasCeilingMini.Properties.Settings.Default.ZkzLastNumber = (int)NumberUpDn.Value;
                             KompasCeilingMini.Properties.Settings.Default.Save();
-                            name = api.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, IC, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+                            name = KmpsAppl.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, CeilingItems, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
                         }
                         else
                         {
@@ -996,10 +390,10 @@ namespace KompasCeilingMini
                     {
                         KompasCeilingMini.Properties.Settings.Default.ZkzLastNumber = (int)NumberUpDn.Value;
                         KompasCeilingMini.Properties.Settings.Default.Save();
-                        name = api.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, IC, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+                        name = KmpsAppl.Doc.GiveMeText(KompasCeilingMini.Properties.Settings.Default.NameFileText, CeilingItems, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
                     }
                 }
-                string path = (KompasCeilingMini.Properties.Settings.Default.WorkFolder + "\\" + name);
+                string path = (KompasCeilingMini.Properties.Settings.Default.stg_work_folders[0] + "\\" + name);
                 FileInfo fi1 = new FileInfo(path + ".frw");
                 if ((fi1.Exists) && (saveas == false))
                 {
@@ -1011,12 +405,10 @@ namespace KompasCeilingMini
                 }
                 else WriteIni();
 
-
-
                 void WriteIni(bool menu = false)
                 {
-                    api.ProgressBar.Start(0, 3, "Сохранение", true);
-                    ksRasterFormatParam rasParam = api.Doc.D5.RasterFormatParam();
+                    KmpsAppl.ProgressBar.Start(0, 3, "Сохранение", true);
+                    ksRasterFormatParam rasParam = KmpsAppl.Doc.D5.RasterFormatParam();
                     //jpeg парам
 
                     if (rasParam != null)
@@ -1025,25 +417,24 @@ namespace KompasCeilingMini
                         rasParam.extResolution = 30;
                     }
                     //frw Компас
-                    if ((api.Doc != null) && (menu == false))
+                    if ((KmpsAppl.Doc. != null) && (menu == false))
                     {
-                        api.ProgressBar.SetProgress(1, "Пишем компас", true);
+                        KmpsAppl.ProgressBar.SetProgress(1, "Пишем компас", true);
 
                         ksDocumentParam documentParam = (ksDocumentParam)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_DocumentParam);
 
-                        api.Doc.D5.ksGetObjParam(api.Doc.D5.reference, documentParam, ldefin2d.ALLPARAM);
+                        KmpsAppl.Doc.D5.ksGetObjParam(KmpsAppl.Doc.D5.reference, documentParam, ldefin2d.ALLPARAM);
                         documentParam.author = Environment.UserName;
                         documentParam.comment = "KMCm";
-                        api.Doc.D5.ksSetObjParam(api.Doc.D5.reference, documentParam, ldefin2d.ALLPARAM);
+                        KmpsAppl.Doc.D5.ksSetObjParam(KmpsAppl.Doc.D5.reference, documentParam, ldefin2d.ALLPARAM);
 
 
-                        if (kmpsCheckBox.IsChecked == true) api.Doc.D5.ksSaveDocument(path + ".frw");
+                        if (KompasCeilingMini.Properties.Settings.Default.stg_frw_check) KmpsAppl.Doc.D5.ksSaveDocument(path + ".frw");
 
                         SaveStatLabel.Content = "Сохранили";
-                        if (JpgCheckBox.IsChecked == true) api.Doc.D5.SaveAsToRasterFormat(KompasCeilingMini.Properties.Settings.Default.WorkFolder + "\\jpg\\" + name + ".jpg", rasParam);
+                        if (KompasCeilingMini.Properties.Settings.Default.stg_jpg_check) KmpsAppl.Doc.D5.SaveAsToRasterFormat(KompasCeilingMini.Properties.Settings.Default.stg_work_folders[0] + "\\jpg\\" + name + ".jpg", rasParam);
 
                     }
-
 
                     if (oldName != string.Empty)
                     {
@@ -1052,9 +443,7 @@ namespace KompasCeilingMini
                         if (File.Exists(oldName.Replace(".frw", ".ini"))) File.Delete(oldName.Replace(".frw", ".ini"));
                     }
 
-                    UpdateForm(false);
-
-                    api.ProgressBar.Stop("Сохранили", true);
+                    KmpsAppl.ProgressBar.Stop("Сохранили", true);
                 }
                 //Записывает INI документ
             }
@@ -1069,11 +458,16 @@ namespace KompasCeilingMini
         {
             if (KmpsAppl.KompasAPI != null)
             {
+                bool mashtab = (bool)mashtabChek.IsChecked;
+                bool noMashtab = (bool)NoMashtab.IsChecked;
+
                 ReCalcBtn.Background = Brushes.YellowGreen;
-                for (int i = 0; i < facturaListCheck.Items.Count; i++)
-                {
-                    GetContour(facturaListCheck.Items[i].ToString(), (bool)mashtabChek.IsChecked, false);
-                }
+                for (int i = 0; i < CeilingItems.Count; i++)
+                    ContourCalc.GetContour(i, CeilingItems, SelectedFactura, ((DefDataSet.FacturaRow)SelectedFactura).Width,
+                          mashtab, noMashtab,
+                    KompasCeilingMini.Properties.Settings.Default.stg_compensation_val, KompasCeilingMini.Properties.Settings.Default.stg_compensation_val, false);
+
+                UpdateForm(false);
             }
             else
             {
@@ -1086,21 +480,10 @@ namespace KompasCeilingMini
             OpenFileVoid();
         }
 
-        private void KmpsCheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            KompasCeilingMini.Properties.Settings.Default.Save();
-        }
 
-        private void JpgCheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            KompasCeilingMini.Properties.Settings.Default.Save();
-        }
 
-        private void AngUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (api != null)
-                api.Doc.Variable.Update("Angle", (double)AngUpDn.Value, string.Empty);
-        }
+
+
 
         private void SaveBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -1109,16 +492,23 @@ namespace KompasCeilingMini
 
         private void HeadBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (api != null)
+            if (API != null)
             {
                 double x = 0, y = 0;
-                double width = api.Doc.Variable.Give("XGabarit", "1");
-                ItemCollection IC = facturaListCheck.Items;
+                double width = KVariable.Give("XGabarit", "1");
                 ksRequestInfo info = (ksRequestInfo)KmpsAppl.KompasAPI.GetParamStruct((short)StructType2DEnum.ko_RequestInfo);
 
-                int j = api.Doc.D5.ksCursor(info, ref x, ref y, 0);
+                int j = KmpsAppl.Doc.D5.ksCursor(info, ref x, ref y, 0);
 
-                api.Doc.CreateText(KompasCeilingMini.Properties.Settings.Default.HeadText, x, y, width, facturaListCheck.Items, KompasCeilingMini.Properties.Settings.Default.sufix, (bool)AutoSizeTextChek.IsChecked, false);
+
+                    KmpsAppl.Doc.CreateText(KompasCeilingMini.Properties.Settings.Default.HeadText,
+                        x, y, width, CeilingItems,
+                        KompasCeilingMini.Properties.Settings.Default.variable_suffix,
+                        KompasCeilingMini.Properties.Settings.Default.stg_text_auto, false);
+
+                double height = KompasCeilingMini.Properties.Settings.Default.HeadText.Split('\n').Length * width / 30;
+
+               // KmpsAppl.Doc.CreateQrCode(true, height, x + 400, y);
 
             }
             else
@@ -1135,7 +525,7 @@ namespace KompasCeilingMini
             System.Windows.Forms.OpenFileDialog openFileDialog = new System.Windows.Forms.OpenFileDialog();
             openFileDialog.Filter = "Kompas (.svg)|*.svg|All Files (*.*)|*.*";
 
-            openFileDialog.InitialDirectory = KompasCeilingMini.Properties.Settings.Default.WorkFolder;
+            openFileDialog.InitialDirectory = KompasCeilingMini.Properties.Settings.Default.stg_work_folders;
             openFileDialog.FileName = null;
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -1164,7 +554,7 @@ namespace KompasCeilingMini
                     {
                         for (int i = 0; i < point.Length; i++)
                         {
-                            if (point[i] != "") api.Doc.D5.ksPoint(double.Parse(point[i].Split(',')[0].Replace('.', ',')) / 10, double.Parse(point[i].Split(',')[1].Replace('.', ',')) / 10, 1);
+                            if (point[i] != "") KmpsAppl.Doc.D5.ksPoint(double.Parse(point[i].Split(',')[0].Replace('.', ',')) / 10, double.Parse(point[i].Split(',')[1].Replace('.', ',')) / 10, 1);
                         }
                     }
                     else
@@ -1174,67 +564,26 @@ namespace KompasCeilingMini
                             if (point[i] != "")
                             {
                                 double X1, Y1, X2, Y2;
-                                X1 = Math.Round(double.Parse(point[i].Split(',')[0].Replace('.', ',')) / 10, 4);
-                                Y1 = -Math.Round(double.Parse(point[i].Split(',')[1].Replace('.', ',')) / 10, 4);
-                                X2 = Math.Round(double.Parse(point[i - 1].Split(',')[0].Replace('.', ',')) / 10, 4);
-                                Y2 = -Math.Round(double.Parse(point[i - 1].Split(',')[1].Replace('.', ',')) / 10, 4);
+                                X1 = Math.Round(double.Parse(point[i].Split(',')[0].Replace('.', ',')) / Comp, 4);
+                                Y1 = -Math.Round(double.Parse(point[i].Split(',')[1].Replace('.', ',')) / Comp, 4);
+                                X2 = Math.Round(double.Parse(point[i - 1].Split(',')[0].Replace('.', ',')) / Comp, 4);
+                                Y2 = -Math.Round(double.Parse(point[i - 1].Split(',')[1].Replace('.', ',')) / Comp, 4);
 
-                                api.Doc.D5.ksLineSeg(X1, Y1, X2, Y2, 2);
-                                //api.Doc.D5.ksEndObj();
+                                KmpsAppl.Doc.D5.ksLineSeg(X1, Y1, X2, Y2, 2);
                             }
                             else
                             {
                                 double X1, Y1, X2, Y2;
-                                X1 = Math.Round(double.Parse(point[point.Length - 2].Split(',')[0].Replace('.', ',')) / 10, 4);
-                                Y1 = -Math.Round(double.Parse(point[point.Length - 2].Split(',')[1].Replace('.', ',')) / 10, 4);
-                                X2 = Math.Round(double.Parse(point[0].Split(',')[0].Replace('.', ',')) / 10, 4);
-                                Y2 = -Math.Round(double.Parse(point[0].Split(',')[1].Replace('.', ',')) / 10, 4);
-                                api.Doc.D5.ksLineSeg(X1, Y1, X2, Y2, 2);
-                                //api.Doc.D5.ksEndObj();
+                                X1 = Math.Round(double.Parse(point[point.Length - 2].Split(',')[0].Replace('.', ',')) / Comp, 4);
+                                Y1 = -Math.Round(double.Parse(point[point.Length - 2].Split(',')[1].Replace('.', ',')) / Comp, 4);
+                                X2 = Math.Round(double.Parse(point[0].Split(',')[0].Replace('.', ',')) / Comp, 4);
+                                Y2 = -Math.Round(double.Parse(point[0].Split(',')[1].Replace('.', ',')) / Comp, 4);
+                                KmpsAppl.Doc.D5.ksLineSeg(X1, Y1, X2, Y2, 2);
                             }
                         }
                     }
                 }
                 else MessageBox.Show("Что-то пошло не так.");
-
-            }
-
-
-        }
-
-        private void ColorCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            if ((api.someFlag) && (ColorCombo.SelectedIndex > -1))
-            {
-                api.Doc.Variable.Update("color", double.Parse(((DataRowView)ColorCombo.SelectedItem).Row["IDFacCol"].ToString()), facturaListCheck.SelectedItem.ToString());
-                api.Doc.Variable.UpdateNote("color", ((DataRowView)ColorCombo.SelectedItem).Row["Name"].ToString(), facturaListCheck.SelectedItem.ToString());
-            }
-        }
-
-        private void HeadSetting_Click(object sender, RoutedEventArgs e)
-        {
-            if (api != null)
-            {
-                EditPanel.HeadEditForm headEdit = new EditPanel.HeadEditForm(api.Doc, facturaListCheck.Items);
-                headEdit.Show();
-            }
-        }
-
-        private void WidthUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (api != null)
-            {
-                double size = api.Doc.Variable.Give("XGabarit", facturaListCheck.SelectedItem.ToString());
-                if ((double)WidthUpDn.Value / size < 1) XUpDn.Value = ((1 - (double)WidthUpDn.Value / size) * 100);
-            }
-        }
-
-        private void HeightUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (api != null)
-            {
-                double size = api.Doc.Variable.Give("YGabarit", facturaListCheck.SelectedItem.ToString());
-                if ((double)HeightUpDn.Value / size < 1) YUpDn.Value = ((1 - (double)HeightUpDn.Value / size) * 100);
             }
         }
 
@@ -1243,251 +592,52 @@ namespace KompasCeilingMini
             System.Diagnostics.Process.Start("https://money.yandex.ru/to/410011060113741");
         }
 
-        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        private async void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            KompasCeilingMini.Properties.Settings.Default.sufix = sufixBox.Text;
-            api.Doc.Variable.UpdateNote("Suffix", sufixBox.Text, string.Empty);
+            KompasCeilingMini.Properties.Settings.Default.variable_suffix = sufixBox.Text;
+             await KVariable.UpdateNote("Suffix", sufixBox.Text, string.Empty);
             KompasCeilingMini.Properties.Settings.Default.Save();
         }
 
-        private void NameSetting_Click(object sender, RoutedEventArgs e)
-        {
-            if (api.Doc != null)
-            {
-                EditPanel.NameEditForm nameEdit = new EditPanel.NameEditForm(api.Doc, facturaListCheck.Items);
-                nameEdit.Show();
-            }
-        }
 
         private void menuConnect_Click(object sender, RoutedEventArgs e)
         {
             targetApi();
         }
 
-        private void paramBox_1_LostFocus(object sender, RoutedEventArgs e)
+        private async void paramBox_1_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (api.Doc != null)
-                api.Doc.Variable.UpdateNote("Comment1", paramBox_1.Text, string.Empty);
+            if (KmpsAppl.Doc. != null)
+                await KVariable.UpdateNote("Comment1", paramBox_1.Text, string.Empty);
         }
 
-        private void paramBox_2_LostFocus(object sender, RoutedEventArgs e)
+        private async void paramBox_2_LostFocus(object sender, RoutedEventArgs e)
         {
-            if (api.Doc != null)
-                api.Doc.Variable.UpdateNote("Comment2", paramBox_2.Text, string.Empty);
+            if (KmpsAppl.Doc. != null)
+                await KVariable.UpdateNote("Comment2", paramBox_2.Text, string.Empty);
         }
 
-        private void NumberUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private async void NumberUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (api != null)
-                api.Doc.Variable.Update("Number", (double)NumberUpDn.Value, string.Empty);
+            if (API != null)
+                await KVariable.UpdateAsync("Number", (double)NumberUpDn.Value, string.Empty);
         }
 
         private void MakeOrd_Click(object sender, RoutedEventArgs e)
         {
-            if (api != null)
-                api.Doc.ST.Coordinate(facturaListCheck.SelectedItem.ToString(), KompasCeilingMini.Properties.Settings.Default.EasyCeilingConnectionString, KompasCeilingMini.Properties.Settings.Default.CoordDopusk);
+            if (API != null)
+                SizeTool.Coordinate(SelectedFactura.ToString(),
+                    ((DefDataSet.FacturaRow)SelectedFactura).Width, 
+                    KompasCeilingMini.Properties.Settings.Default.stg_crd_dopusk,
+                    KompasCeilingMini.Properties.Settings.Default.stg_text_auto ? 
+                    KVariable.Give("XGabarit", SelectedFactura.ToString()) / 40 * 2 :
+                    KompasCeilingMini.Properties.Settings.Default.stg_text_size);
         }
 
-        private void mashtabChek_Click(object sender, RoutedEventArgs e)
-        {
-            if (api != null)
-            {
-                mashtabChek.IsChecked = api.Doc.Mashtab(!(bool)mashtabChek.IsChecked);
-                //Пересчитываем контуры
-                for (int i = 0; i < facturaListCheck.Items.Count; i++)
-                    GetContour(facturaListCheck.Items[i].ToString(), (bool)mashtabChek.IsChecked, false);
-            }
-            else
-                MessageBox.Show(this, "Объект не захвачен", "Сообщение");
-        }
-
-        private void button1_Click(object sender, RoutedEventArgs e)
-        {
-            observer = new BluetoothObserver();
-            observer.PropertyChanged += ConnectChange;
-
-            observer.Start("Laser Distance Meter", "0000ffb0-0000-1000-8000-00805f9b34fb", "0000ffb2-0000-1000-8000-00805f9b34fb");
-
-            void ConnectChange(object sender, EventArgs e)
-            {
-                Dispatcher.Invoke((Action)delegate
-                {
-                    bool _connectstat;
-
-                    observer.UpdateConnectStat().ContinueWith(r =>
-                    {
-                        _connectstat = (r.Result);
-                        ConnectBtBtn.Content = _connectstat ? "Соеденили" : "Соедение";
-                    },
-                    TaskScheduler.FromCurrentSynchronizationContext());
-                });
-
-            }
-        }
-
-
-        void SetSizeToSelectDimention(double size, int DimRef)
-        {
-            if (api.Doc != null)
-            {
-
-                //если один объект
-                object obj = (object)KmpsAppl.KompasAPI.TransferReference(DimRef, api.Doc.D5.reference);
-                IDrawingObject pObj = (IDrawingObject)obj;
-                SetSizeToLineDim(pObj);
-
-
-                void SetSizeToLineDim(object dimension)
-                {
-                    IDrawingObject1 Dim1 = (IDrawingObject1)dimension;
-                    Array arrayConstrait = (Array)Dim1.Constraints;
-
-
-                    foreach (IParametriticConstraint constraint in arrayConstrait)
-                        if (constraint.ConstraintType == ksConstraintTypeEnum.ksCDimWithVariable)
-                            if (size != 0)
-                                api.Doc.Variable.Update(constraint.Variable, size * 100, string.Empty); //вместо 100 компенсатор
-                }
-            }
-        }
-
-        private void MeasurelistBox_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-
-        }
-
-        private void CreateRoomBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (api.Doc != null)
-            {
-                api.someFlag = false;
-                api.Doc.ST.CreateRoom((double)CreateRoomUpDn.Value, 200);
-                api.someFlag = true;
-            }
-        }
-
-
-        private void StartMeasureBtn_Click(object sender, RoutedEventArgs e)
-        {
-            DimentionlistBox.DataContext = null;
-            DimentionlistBox.DisplayMemberPath = "Name";
-            DimentionlistBox.SelectedValuePath = "Reference";
-            DimentionlistBox.ItemsSource = api.Doc.ST.GetLineDimentionList();
-            //DimentionlistBox.SelectedIndex = 0;
-
-            observer = new BluetoothObserver();
-            observer.PropertyChanged += ConnectChange;
-
-            observer.Start("Laser Distance Meter", "0000ffb0-0000-1000-8000-00805f9b34fb", "0000ffb2-0000-1000-8000-00805f9b34fb");
-
-            void ConnectChange(object sender, EventArgs e)
-            {
-                Dispatcher.Invoke((Action)delegate
-                {
-                    object Dim = (object)KmpsAppl.KompasAPI.TransferReference((int)DimentionlistBox.SelectedValue, api.Doc.D5.reference);
-                    IDrawingObject1 Dim1 = (IDrawingObject1)Dim;
-                    Array arrayConstrait = (Array)Dim1.Constraints;
-
-
-                    foreach (IParametriticConstraint constraint in arrayConstrait)
-                        if (constraint.ConstraintType == ksConstraintTypeEnum.ksCDimWithVariable)
-                        {
-                                observer.AsyncLastDimmenetion().ContinueWith(r =>
-                                {
-                                    api.Doc.Variable.Update(constraint.Variable, double.Parse(r.Result) * 100, string.Empty); //вместо 100 компенсатор
-                                            DimentionlistBox.SelectedIndex = DimentionlistBox.SelectedIndex + 1 > DimentionlistBox.Items.Count - 1 ? 0 : DimentionlistBox.SelectedIndex + 1;
-                                },
-                                TaskScheduler.FromCurrentSynchronizationContext());
-                        }
-                });
-
-            }
-        }
-
-        private void DimentionlistBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (DimentionlistBox.SelectedIndex > -1)
-            {
-                api.Doc.GetChooseContainer().UnchooseAll();
-                api.Doc.D5.ksLightObj((int)DimentionlistBox.SelectedValue, 1);
-
-                object Dim = (object)KmpsAppl.KompasAPI.TransferReference((int)DimentionlistBox.SelectedValue, api.Doc.D5.reference);
-                if (Dim != null)
-                {
-                    IDrawingObject1 Dim1 = (IDrawingObject1)Dim;
-                    Array arrayConstrait = (Array)Dim1.Constraints;
-
-                    if (arrayConstrait != null)
-                        foreach (IParametriticConstraint constraint in arrayConstrait)
-                            if (constraint.ConstraintType == ksConstraintTypeEnum.ksCDimWithVariable)
-                                DimVariableBox.Text = api.Doc.Variable.Give(constraint.Variable, string.Empty).ToString(); //вместо 100 компенсатор
-                    DimVariableBox.SelectAll();
-                    api.Doc.GetSelectContainer().UnselectAll();
-                }
-                else MessageBox.Show("Не найден размер");
-            }
-        }
-
-        private void SplitLineBtn_Click(object sender, RoutedEventArgs e)
-        {
-            if (api.Doc.ST != null)
-            {
-                api.someFlag = false;
-                api.Doc.ST.SplitLine((double)SplitLineUpDn.Value, (bool)DellBaseDimChek.IsChecked);
-                api.someFlag = true;
-            }
-        }
-
-
-
-        private void DimVariableBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-        {
-            if (e.Key == System.Windows.Input.Key.Enter)
-            {
-                if (DimentionlistBox.SelectedValue != null)
-                {
-                    object Dim = (object)KmpsAppl.KompasAPI.TransferReference((int)DimentionlistBox.SelectedValue, api.Doc.D5.reference);
-                    IDrawingObject1 Dim1 = (IDrawingObject1)Dim;
-                    Array arrayConstrait = (Array)Dim1.Constraints;
-
-                    foreach (IParametriticConstraint constraint in arrayConstrait)
-                        if (constraint.ConstraintType == ksConstraintTypeEnum.ksCDimWithVariable)
-                        {
-                            api.Doc.Variable.Update(constraint.Variable, double.Parse(DimVariableBox.Text.Replace('.', ',')), string.Empty);
-                            DimentionlistBox.SelectedIndex = DimentionlistBox.SelectedIndex + 1 > DimentionlistBox.Items.Count - 1 ? 0 : DimentionlistBox.SelectedIndex + 1;
-                        }
-                }
-            }
-        }
-
-        private void DimVariableBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            DimVariableBox.SelectAll();
-        }
-
-        private void FixDimBtn_Click(object sender, RoutedEventArgs e)
-        {
-            api.Doc.ST.SetVariableToDim(false, ksDimensionTextBracketsEnum.ksDimSquareBrackets);
-        }
-
-        private void UnfixDimBtn_Click(object sender, RoutedEventArgs e)
-        {
-            api.Doc.ST.SetVariableToDim(true, ksDimensionTextBracketsEnum.ksDimBrackets);
-        }
-
-        private void VariableDimBtn_Click(object sender, RoutedEventArgs e)
-        {
-            api.Doc.ST.SetVariableToDim(false, ksDimensionTextBracketsEnum.ksDimBracketsOff);
-        }
-
-        private void ToSelectDimBtn_Click(object sender, RoutedEventArgs e)
-        {
-            api.Doc.ST.SetVariableToDim(false, ksDimensionTextBracketsEnum.ksDimBracketsOff, double.Parse(DimVariableBox.Text.Replace('.',',')));
-        }
 
         private void KsContrForm_Deactivated(object sender, EventArgs e)
         {
-            if (this.Focusable == true)
+            if ((this.Focusable == true)&&(MainFrame.ResizeMode == ResizeMode.NoResize))
             {
                 this.Opacity = 0.4;
             }
@@ -1495,49 +645,910 @@ namespace KompasCeilingMini
 
         private void KsContrForm_Activated(object sender, EventArgs e)
         {
-            this.Opacity = 1;
-        }
-
-        private void CloseBtn_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
-        private void HeadGrid_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            clicado = true;
-            this.lm = e.GetPosition(this);
-            this.lm.Y = Convert.ToInt16(this.Top) + this.lm.Y;
-            this.lm.X = Convert.ToInt16(this.Left) + this.lm.X;
-        }
-
-        private void HeadGrid_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            clicado = false;
-        }
-
-        private void HeadGrid_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            if (clicado)
+            if (MainFrame.ResizeMode == ResizeMode.NoResize)
             {
-                Point MousePosition = e.GetPosition(this);
-                Point MousePositionAbs = new Point();
-                MousePositionAbs.X = Convert.ToInt16(this.Left) + MousePosition.X;
-                MousePositionAbs.Y = Convert.ToInt16(this.Top) + MousePosition.Y;
-                this.Left = this.Left + (MousePositionAbs.X - this.lm.X);
-                this.Top = this.Top + (MousePositionAbs.Y - this.lm.Y);
-                this.lm = MousePositionAbs;
+                this.Opacity = 1;
             }
         }
 
-        private void HeadGrid_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+
+        //Класс для возврата
+        public class ComboBT
         {
-            clicado = false;
+            public string Name { get; set; }
+            public string Mac { get; set; }
+
+            public ComboBT(string _name, string _mac)
+            {
+                Name = _name;
+                Mac = _mac;
+            }
+        }
+
+        public void ChangeDoc(object sender, KmpsAppl e)
+        {
+
+        }
+
+        private void WidthUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            if (MainWindow.API != null)
+            {
+                double size = KVariable.Give("XGabarit", facturaListCheck.SelectedItem.ToString());
+                if ((double)WidthUpDn.Value / size < 1) XUpDn.Value = Math.Round(((1 - (double)WidthUpDn.Value / size) * 100), 1);
+            }
+        }
+
+        private void HeightUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            if (MainWindow.API != null)
+            {
+                double size = KVariable.Give("YGabarit", facturaListCheck.SelectedItem.ToString());
+                if ((double)HeightUpDn.Value / size < 1) YUpDn.Value = Math.Round(((1 - (double)HeightUpDn.Value / size) * 100), 1);
+            }
+        }
+
+        private async void UpdateForm(bool First = true)
+        {
+            if ((KmpsAppl.KompasAPI != null) && (KmpsAppl.Appl.ActiveDocument != null))
+            {
+
+                if (KmpsAppl.Appl.ActiveDocument.Name != string.Empty)
+                    StatusLabel(this, KmpsAppl.Appl.ActiveDocument.Name);
+                else StatusLabel(this, "Новый документ");
+
+
+                IVariable7 var;
+
+                if (First == true)
+                {
+                    if (!KmpsAppl.Doc.IsVariableNameValid("Number"))
+                    {
+                        facturaListCheck.Items.Clear();
+
+                        var = KmpsAppl.Doc.Variable[false, "Number"];
+                        if (var.Note != "Number")
+                        {
+                            string[] numberList = var.Note.Split(';');
+                            for (int i = 0; i < numberList.Length; i++) facturaListCheck.Items.Add(numberList[i]);
+                            facturaListCheck.SelectedIndex = 0;
+                        }
+                        else
+                        {
+                            var.Note = "1";
+                            KmpsAppl.Doc.UpdateVariables();
+                        }
+                    }
+                    else
+                    {
+                        facturaListCheck.Items.Clear();
+                        KVariable.Add("Number", 1, "Номера");
+                        var = KmpsAppl.Doc.Variable[false, "Number"];
+                        var.Note = "1";
+                        KmpsAppl.Doc.UpdateVariables();
+                        facturaListCheck.Items.Add("1");
+                        facturaListCheck.SelectedIndex = 0;
+                    }
+
+                    mashtabChek.IsChecked = false;
+                }
+
+                string index = facturaListCheck.SelectedItem.ToString();
+
+
+                //Number
+                if (KmpsAppl.Doc.IsVariableNameValid("Number")) KVariable.Add("Number", 0, "Площадь");
+                var = KVariable. Variable[false, "Number"];
+                Number(this, (int)var.Value);
+                //suffix
+                if (KmpsAppl.Doc.IsVariableNameValid("Suffix")) KVariable.Add("Suffix", 0, "Площадь");
+                var = KmpsAppl.Doc.Variable[false, "Suffix"];
+                Suffix(this, var.Note);
+
+                //площадь
+                if (KmpsAppl.Doc.IsVariableNameValid("Sqare" + index)) KVariable.Add("Sqare" + index, 0, "Площадь");
+                var = KmpsAppl.Doc.Variable[false, "Sqare" + index];
+                SqareBox.Text = var.Value.ToString();
+
+                //площадь с усадкой
+                if (KmpsAppl.Doc.IsVariableNameValid("SqareU" + index)) KVariable.Add("SqareU" + index, 0, "ПлощадьУ");
+                var = KmpsAppl.Doc.Variable[false, "SqareU" + index];
+                SqareUBox.Text = var.Value.ToString();
+
+                //периметр
+                if (KmpsAppl.Doc.IsVariableNameValid("Perimetr" + index)) KVariable.Add("Perimetr" + index, 0, "Perimetr");
+                var = KmpsAppl.Doc.Variable[false, "Perimetr" + index];
+                PerimetrBox.Text = var.Value.ToString();
+
+                //периметрУ
+                if (KmpsAppl.Doc.IsVariableNameValid("PerimetrU" + index)) KVariable.Add("PerimetrU" + index, 0, "PerimetrU");
+                //периметр прямых
+                if (KmpsAppl.Doc.IsVariableNameValid("LineP" + index)) KVariable.Add("LineP" + index, 0, "LineP");
+                var = KmpsAppl.Doc.Variable[false, "LineP" + index];
+
+                //периметр кривых
+                if (KmpsAppl.Doc.IsVariableNameValid("CurveP" + index)) KVariable.Add("CurveP" + index, 0, "CurveP");
+                var = KmpsAppl.Doc.Variable[false, "CurveP" + index];
+
+                //углы
+                if (KmpsAppl.Doc.IsVariableNameValid("Angle")) KVariable.Add("Angle", 4, "Angle");
+                var = KmpsAppl.Doc.Variable[false, "Angle"];
+                AngUpDn.Value = (byte)var.Value;
+
+                //шов
+                if (KmpsAppl.Doc.IsVariableNameValid("Shov" + index)) KVariable.Add("Shov" + index, 0, "Shov");
+                var = KmpsAppl.Doc.Variable[false, "Shov" + index];
+                ShovBox.Text = var.Value.ToString();
+
+
+                //XGabarit
+                if (KmpsAppl.Doc.IsVariableNameValid("XGabarit" + index)) KVariable.Add("XGabarit" + index, 0, "XGabarit");
+                var = KmpsAppl.Doc.Variable[false, "XGabarit" + index];
+                WidthUpDn.Value = Math.Round((var.Value * ((100 - KVariable.Give("koefX", string.Empty)) / 100)), 1);
+
+                //YGabarit
+                if (KmpsAppl.Doc. KmpsAppl.Doc.IsVariableNameValid("YGabarit" + index)) KVariable.Add("YGabarit" + index, 0, "YGabarit");
+                var = KmpsAppl.Doc.Variable[false, "YGabarit" + index];
+                HeightUpDn.Value = Math.Round((var.Value * ((100 - KVariable.Give("koefY", string.Empty)) / 100)), 1);
+
+                //Xcrd
+                if (KmpsAppl.Doc.IsVariableNameValid("Xcrd" + index)) KVariable.Add("Xcrd" + index, 0, "Xcrd");
+                var = KmpsAppl.Doc.Variable[false, "Xcrd" + index];
+
+                //Ycrd
+                if (KmpsAppl.Doc.IsVariableNameValid("Ycrd" + index)) KVariable.Add("Ycrd" + index, 0, "Ycrd");
+                var = KmpsAppl.Doc.Variable[false, "Ycrd" + index];
+
+
+                //X
+                if (KmpsAppl.Doc.IsVariableNameValid("koefX")) KVariable.Add("koefX", 7, "Unchecked");
+                var = KmpsAppl.Doc.Variable[false, "koefX"];
+                XUpDn.Value = var.Value;
+                if (var.Note == "koefX") await KVariable.UpdateNote("koefX", "Unchecked", "");
+                //Статус усадки;
+                if (First)
+                {
+                    if (var.Note == "Checked") mashtabChek.IsChecked = true;
+                    else mashtabChek.IsChecked = false;
+                }
+
+                //Y
+                if (KmpsAppl.Doc.IsVariableNameValid("koefY")) KVariable.Add("koefY", 7, "koefY");
+                var = KmpsAppl.Doc.Variable[false, "koefY"];
+                YUpDn.Value = Math.Round(var.Value, 1);
+
+
+                //фотопечать
+                if (KmpsAppl.Doc.IsVariableNameValid("photo" + index)) KVariable.Add("photo" + index, 0, "photo");
+                var = KmpsAppl.Doc.Variable[false, "photo" + index];
+                FpUpDn.Value = Math.Round(var.Value, 1);
+
+                //длина
+                if (KmpsAppl.Doc.IsVariableNameValid("lenth" + index)) KVariable.Add("lenth" + index, 0, "lenth");
+                var = KmpsAppl.Doc.Variable[false, "lenth" + index];
+
+                //фактура
+                if (KmpsAppl.Doc.IsVariableNameValid("factura" + index)) KVariable.Add("factura" + index, -1, "factura");
+                var = KmpsAppl.Doc.Variable[false, "factura" + index];
+
+                double sizeX = KVariable.Give("XGabarit", index) * ((100 - KVariable.Give("koefX", string.Empty)) / 100);
+                double sizeY = KVariable.Give("YGabarit", index) * ((100 - KVariable.Give("koefY", string.Empty)) / 100);
+                DataSetFacturaRefresh("Width >= " + Math.Min(sizeX * 0.97, sizeY * 0.97).ToString().Replace(',', '.'), "NumberPP ASC");
+                if (FacturaCombo.Items.Count == 0)
+                    DataSetFacturaRefresh(string.Empty, "NumberPP ASC");
+
+
+                //цвет
+                if (KmpsAppl.Doc.IsVariableNameValid("color" + index)) KVariable.Add("color" + index, -1, "color");
+                var = KmpsAppl.Doc.Variable[false, "color" + index];
+                DataSetFacturaColorRefresh();
+
+                if (var.Note == "color" + index) await KVariable.UpdateNote("color", ColorCombo.Text, index);
+
+                //вырез
+                if (KmpsAppl.Doc.IsVariableNameValid("cut" + index)) KVariable.Add("cut" + index, 0, "вырез");
+                var = KmpsAppl.Doc.Variable[false, "cut" + index];
+                CutBox.Text = var.Value.ToString();
+
+                //Комментарий 1
+                if (KmpsAppl.Doc.IsVariableNameValid("Comment1")) KVariable.Add("Comment1", 0, "Comment1");
+                var = KmpsAppl.Doc.Variable[false, "Comment1"];
+                paramBox_1.Text = var.Note;
+                //Комментарий 2
+                if (KmpsAppl.Doc.D5.IsVariableNameValid("Comment2")) KVariable.Add("Comment2", 0, "Comment2");
+                var = KmpsAppl.Doc.Variable[false, "Comment2"];
+                paramBox_2.Text = var.Note;
+
+            }
+            else if (KmpsAppl.Appl.ActiveDocument == null)
+            {
+                StatusLabel(this, "Пусто");
+            }
+        }
+
+
+        private void DataSetFacturaRefresh(string StrFilter, string StrOrder)
+        {
+            KmpsAppl.someFlag = false;
+            FacturaCombo.ItemsSource = null;
+            FacturaCombo.Items.Clear();
+
+            if (DefDataSet != null)
+            {
+                FacturaCombo.DisplayMemberPath = "DisplayName";
+                FacturaCombo.SelectedValuePath = "IDFactura";
+                FacturaCombo.ItemsSource = DefDataSet.Tables["Factura"].Select(StrFilter, StrOrder);
+
+                FacturaCombo.SelectedValue = KVariable.Give("factura", facturaListCheck.SelectedItem.ToString());
+            }
+            else FacturaCombo.Items.Add("Не найдена база");
+            KmpsAppl.someFlag = true;
+
+            if (FacturaCombo.SelectedIndex < 0)
+                FacturaCombo.SelectedIndex = 0;
+
+            SelectedFactura = FacturaCombo.SelectedItem;
+
+            if (ColorCombo.SelectedIndex < 0)
+                ColorCombo.SelectedIndex = 0;
+
+            SelectedColor = ColorCombo.SelectedItem;
+        }
+
+
+        private void CalcAllBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (KmpsAppl.KompasAPI != null)
+            {
+                CalcAllBtn.IsEnabled = false;
+                bool mashtab = (bool)mashtabChek.IsChecked;
+                bool noMashtab = (bool)NoMashtab.IsChecked;
+                int index = facturaListCheck.SelectedIndex;
+
+                ContourCalc.GetContour(index, CeilingItems, SelectedFactura, ((DefDataSet.FacturaRow)SelectedFactura).Width,
+                          mashtab, noMashtab,
+                    KompasCeilingMini.Properties.Settings.Default.stg_compensation_val, KompasCeilingMini.Properties.Settings.Default.stg_compensation_val, true);
+
+                KmpsAppl.Appl.StopCurrentProcess();
+                UpdateForm(false);
+                CalcAllBtn.IsEnabled = true;
+            }
+            else
+            {
+                MessageBox.Show("Объект не захвачен", "Сообщение");
+            }
+        }
+
+        private async void PlusFacturaBtn_Copy_Click(object sender, RoutedEventArgs e)
+        {
+            if (facturaListCheck.Items.Count > 1)
+            {
+                await KVariable.ClearAsync(facturaListCheck.SelectedItem.ToString(), DefDataSet.Tables["Variable"]);
+                KmpsAppl.Doc.Macro.RemoveCeilingMacro(facturaListCheck.SelectedItem.ToString());
+                facturaListCheck.Items.Remove(facturaListCheck.SelectedItem);
+            }
+        }
+
+        private void MashtabChek_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.RightButton == System.Windows.Input.MouseButtonState.Pressed)
+                mashtabChek.IsChecked = !mashtabChek.IsChecked;
+            else if (e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            {
+
+            }
+        }
+
+        private void mashtabChek_Click(object sender, RoutedEventArgs e)
+        {
+            if (MainWindow.API != null)
+            {
+                mashtabChek.IsChecked = KmpsAppl.Doc.Mashtab(!(bool)mashtabChek.IsChecked);
+                //Пересчитываем контуры
+                bool mashtab = (bool)mashtabChek.IsChecked;
+                bool noMashtab = (bool)NoMashtab.IsChecked;
+
+                for (int i = 0; i < CeilingItems.Count; i++)
+                    ContourCalc.GetContour(i, CeilingItems, SelectedFactura, ((DefDataSet.FacturaRow)SelectedFactura).Width,
+                          mashtab, noMashtab,
+                    KompasCeilingMini.Properties.Settings.Default.stg_compensation_val, KompasCeilingMini.Properties.Settings.Default.stg_compensation_val, false);
+
+                UpdateForm(false);
+            }
+            else
+                MessageBox.Show("Объект не захвачен", "Сообщение");
+        }
+
+        private void PlusFacturaBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (KmpsAppl.Doc != null)
+            {
+                facturaListCheck.Items.Add(facturaListCheck.Items.Count + 1);
+
+                {
+                    IVariable7 var = KmpsAppl.Doc.Variable[false, "Number"];
+                    var.Note = GiveNumberStroke();
+                    KmpsAppl.Doc.UpdateVariables();
+                }
+
+                facturaListCheck.SelectedIndex = facturaListCheck.Items.Count - 1;
+
+                string GiveNumberStroke()
+                {
+                    string number = facturaListCheck.Items[0].ToString();
+                    for (int i = 1; i < facturaListCheck.Items.Count; i++)
+                        number += ";" + facturaListCheck.Items[i].ToString();
+                    return number;
+                }
+            }
+        }
+
+        private void DataSetFacturaColorRefresh()
+        {
+            if (FacturaCombo.SelectedIndex > -1)
+            {
+
+                ColorCombo.ItemsSource = null;
+                KmpsAppl.someFlag = false;
+                ColorCombo.Items.Clear();
+
+                //DataSet ds = sqltool.ComboDataSet("SELECT IDFacCol, Name FROM dbo.FactruaColor WHERE IDFactura=" + FacturaCombo.SelectedValue + " ORDER BY NumberPP", "FactruaColor", KompasCeilingMini.Properties.Settings.Default.EasyCeilingConnectionString);
+
+                if (DefDataSet != null)
+                {
+                    ColorCombo.DisplayMemberPath = "Name";
+                    ColorCombo.SelectedValuePath = "IDFacCol";
+                    ColorCombo.ItemsSource = DefDataSet.Tables["FacturaColor"].Select("IDFactura = " + FacturaCombo.SelectedValue, "NumberPP ASC");
+
+
+                    ColorCombo.SelectedValue = KVariable.Give("color", facturaListCheck.SelectedItem.ToString());
+                }
+                else ColorCombo.Items.Add("Не найдена база");
+
+                KmpsAppl.someFlag = true;
+
+                if (ColorCombo.SelectedIndex < 0)
+                    ColorCombo.SelectedIndex = 0;
+            }
+
+        }
+
+        private void FacturaListCheck_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (facturaListCheck.Items.Count > 0)
+                if (KmpsAppl.KompasAPI != null)
+                {
+                    if (facturaListCheck.SelectedIndex < 0) facturaListCheck.SelectedIndex = 0;
+
+                    CeilingItems = facturaListCheck.Items;
+                    SelectedCeiling = facturaListCheck.SelectedItem;
+
+                    IVariable7 var = KmpsAppl.Doc.Variable[false, "Number"];
+                    var.Note = GiveNumberStroke();
+                    KmpsAppl.Doc.UpdateVariables();
+                    UpdateForm(false);
+
+                    //Возвращает строку всех фактур
+                    string GiveNumberStroke()
+                    {
+                        string number = facturaListCheck.Items[0].ToString();
+                        for (int i = 1; i < facturaListCheck.Items.Count; i++) number += ";" + facturaListCheck.Items[i].ToString();
+                        return number;
+                    }
+                }
+        }
+
+        #region CalcAll
+
+        //Изменили документ
+        public static event EventHandler<String> StatusLabel;
+        public static event EventHandler<Int32> Number;
+        public static event EventHandler<String> Suffix;
+        public static ItemCollection CeilingItems;
+        public static object SelectedCeiling;
+        public static bool Mashtab;
+        public static object SelectedFactura;
+        public static object SelectedColor;
+
+
+
+        private async void FacturaCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if ((KmpsAppl.someFlag) && (KmpsAppl.KompasAPI != null) && (FacturaCombo.SelectedIndex > -1))
+            {
+                SelectedFactura = FacturaCombo.SelectedItem;
+                await KVariable.UpdateAsync("factura", (double)((DefDataSet.FacturaRow)FacturaCombo.SelectedItem).IDFactura, facturaListCheck.SelectedItem.ToString());
+                await KVariable.UpdateNote("factura", ((DefDataSet.FacturaRow)FacturaCombo.SelectedItem).DisplayName.ToString(), facturaListCheck.SelectedItem.ToString());
+                DataSetFacturaColorRefresh();
+            }
+        }
+
+        private async void ColorCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if ((KmpsAppl.someFlag) && (ColorCombo.SelectedIndex > -1))
+            {
+                SelectedColor = ColorCombo.SelectedItem;
+                await KVariable.UpdateAsync("color", ((DefDataSet.FacturaColorRow)ColorCombo.SelectedItem).IDFacCol, facturaListCheck.SelectedItem.ToString());
+                await KVariable.UpdateNote("color", ((DefDataSet.FacturaColorRow)ColorCombo.SelectedItem).Name, facturaListCheck.SelectedItem.ToString());
+            }
+        }
+
+        private async void AngUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            if (MainWindow.API != null)
+                await KVariable.UpdateAsync("Angle", (double)AngUpDn.Value, string.Empty);
+        }
+        #endregion
+
+        #region DimPanel
+        private BluetoothObserver observer;
+        public void ListDimentionChange(object sender, List<List<SizeTool.ComboData>> e)
+        {
+            dispatcher.Invoke(new Action(() =>
+            {
+                VariableDimentionlistBox.DataContext = null;
+                VariableDimentionlistBox.DisplayMemberPath = "Name";
+                VariableDimentionlistBox.SelectedValuePath = "Reference";
+                VariableDimentionlistBox.ItemsSource = e[0];
+
+                FreeDimentionlistBox.DataContext = null;
+                FreeDimentionlistBox.DisplayMemberPath = "Name";
+                FreeDimentionlistBox.SelectedValuePath = "Reference";
+                FreeDimentionlistBox.ItemsSource = e[1];
+
+                FixDimentionlistBox.DataContext = null;
+                FixDimentionlistBox.DisplayMemberPath = "Name";
+                FixDimentionlistBox.SelectedValuePath = "Reference";
+                FixDimentionlistBox.ItemsSource = e[2];
+            }));
+            System.Threading.Thread.Sleep(50);
+        }
+
+        private void button1_Click(object sender, RoutedEventArgs e)
+        {
+            ConnectObserver();
+        }
+
+        private void ConnectObserver()
+        {
+            if (observer == null)
+            {
+                observer = new BluetoothObserver();
+                observer.statlabelChange += new EventHandler<string>(ChangeStatusBT);
+                observer.onLastDimention += new EventHandler<double>(SetLastDimention);
+                GC.KeepAlive(observer);
+            }
+            if (BTcombo.SelectedItem != null)
+                if ((BluetoothObserver.Watcher == null) || (BluetoothObserver.Watcher.Status == Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcherStatus.Stopped) && (!observer.isFindDevice))
+                    observer.Start(BTcombo.Text, BTcombo.SelectedValue.ToString(), "0000ffb0-0000-1000-8000-00805f9b34fb", "0000ffb2-0000-1000-8000-00805f9b34fb");
+
+               /* else if ((observer.isFindDevice) || (BluetoothObserver.Watcher.Status == Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcherStatus.Stopped))
+                {
+                    BluetoothObserver.Watcher.Stop();
+                    observer.isFindDevice = false;
+                }*/
+        }
+
+
+        private void ChangeStatusBT(object sender, string e)
+        {
+            dispatcher.Invoke( new Action(() =>
+            {
+                ConnectBtBtn.Content = e;
+            }));
+            System.Threading.Thread.Sleep(50);
+        }
+
+        private void SetLastDimention(object sender, double e)
+        {
+            dispatcher.Invoke(new Action(() =>
+            {
+                KmpsAppl.Doc.ST.UpdateOrMakeLine(e * (1000/Comp), (bool)AddingLineToggle.IsChecked, true, KmpsAppl.Doc.GiveSelectOrChooseObj());
+                if (VariableDimentionlistBox.SelectedItems.Count == 1)
+                    VariableDimentionlistBox.SelectedIndex = VariableDimentionlistBox.SelectedIndex + 1 > VariableDimentionlistBox.Items.Count - 1 ? 0 : VariableDimentionlistBox.SelectedIndex + 1;
+
+                KmpsAppl.ZoomAll();
+            }));
+            System.Threading.Thread.Sleep(100);
+        }
+
+
+        private async void DimentionlistBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ListBox listBox = (ListBox)sender;
+
+            if (listBox.SelectedItems != null)
+            {
+                KmpsAppl.Doc.GetChooseContainer().UnchooseAll();
+                // ConnectObserver();
+                foreach (SizeTool.ComboData data in listBox.SelectedItems)
+                {
+                    DimVariableBox.Text = await Task<string>.Factory.StartNew(() =>
+                    {
+                        object Dim = (object)KmpsAppl.KompasAPI.TransferReference(data.Reference, KmpsAppl.Doc.D5.reference);
+                        if (Dim != null)
+                        {
+                            KmpsAppl.Doc.GetChooseContainer().Choose(Dim);
+
+                            IDrawingObject1 Dim1 = (IDrawingObject1)Dim;
+                            Array arrayConstrait = (Array)Dim1.Constraints;
+
+                            if (arrayConstrait != null)
+                                foreach (IParametriticConstraint constraint in arrayConstrait)
+                                    if (constraint.ConstraintType == ksConstraintTypeEnum.ksCDimWithVariable)
+                                         return Math.Round(KVariable.Give(constraint.Variable, string.Empty),2).ToString(); //вместо 100 компенсатор
+
+                            if (!KmpsAppl.Doc.GetSelectContainer().IsSelected((IDrawingObject)Dim)) KmpsAppl.Doc.GetSelectContainer().UnselectAll();
+                        }
+                        return string.Empty;
+                    });
+
+                    DimVariableBox.SelectAll();
+                }
+            }
+        }
+
+        private void DimVariableBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+
+            if (Keyboard.Modifiers == ModifierKeys.None && e.Key == System.Windows.Input.Key.Enter)
+            {
+                KmpsAppl.Doc.ST.UpdateOrMakeLine(double.Parse(DimVariableBox.Text.Replace('.', ',')), (bool)AddingLineToggle.IsChecked, true, KmpsAppl.Doc.GiveSelectOrChooseObj());
+                
+                if (VariableDimentionlistBox.SelectedItems.Count == 1)
+                    VariableDimentionlistBox.SelectedIndex = VariableDimentionlistBox.SelectedIndex + 1 > VariableDimentionlistBox.Items.Count - 1 ? 0 : VariableDimentionlistBox.SelectedIndex + 1;
+            }
+            //Если нажат Шифт
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == System.Windows.Input.Key.Enter)
+                KmpsAppl.Doc.ST.UpdateOrMakeLine(double.Parse(DimVariableBox.Text.Replace('.', ',')), (bool)AddingLineToggle.IsChecked, false, null);
+
+            //Контрол
+            else if (Keyboard.Modifiers == ModifierKeys.Shift && e.Key == System.Windows.Input.Key.Enter)
+            {
+                AddingLineToggle.IsChecked = true;
+                KmpsAppl.Doc.ST.UpdateOrMakeLine(double.Parse(DimVariableBox.Text.Replace('.', ',')), (bool)AddingLineToggle.IsChecked, false, KmpsAppl.Doc.GiveSelectOrChooseObj());
+            }
+
+            if (e.Key == System.Windows.Input.Key.Enter)
+                DimVariableBox.Select(0, DimVariableBox.Text.Length);
+
+            KmpsAppl.ZoomAll();
+        }
+
+        //Обновляем лист боксы с размерами
+        private void RefreshDimBtn_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshDimListBox();
+        }
+
+        private async void RefreshDimListBox()
+        {
+            AddingLineToggle.IsChecked = false;
+            await KmpsAppl.Doc.ST.GetLineDimentionListAsync();
+        }
+
+        private void DimVariableBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            DimVariableBox.SelectAll();
+        }
+
+        private void ChangePositionItem(bool up)
+        {
+            if (VariableDimentionlistBox.SelectedItems != null)
+            {
+                int step = up ? -1 : 1;
+
+                for (int i = up ? 0 : VariableDimentionlistBox.SelectedItems.Count - 1; up ? i < VariableDimentionlistBox.SelectedItems.Count : i >= 0; i -= step)
+                {
+                    SizeTool.ComboData data = (SizeTool.ComboData)VariableDimentionlistBox.SelectedItems[i];
+                    if ((data.NumberPP + step >= 0) && (data.NumberPP + step < VariableDimentionlistBox.Items.Count))
+                    {
+                        //Смещаем выбранный объект в порядке
+                        data.NumberPP += step;
+
+                        //Смещаем объект что стоял перед/за ним
+                        ((SizeTool.ComboData)VariableDimentionlistBox.Items[VariableDimentionlistBox.Items.IndexOf(data) + step]).NumberPP -= step;
+
+                        //Обновляем коллекцию
+                        CollectionViewSource.GetDefaultView(VariableDimentionlistBox.ItemsSource).Refresh();
+                    }
+                    else break;
+                }
+            }
+        }
+
+        private async void BTcombo_Initialized(object sender, EventArgs e)
+        {
+            BTcombo.DisplayMemberPath = "Name";
+            BTcombo.SelectedValuePath = "Mac";
+            var diveceList = await PairedList();
+            BTcombo.ItemsSource = diveceList;
+
+            BTcombo.SelectedValue = KompasCeilingMini.Properties.Settings.Default.BlueAddres;
+        }
+
+        //Запрос LE paired устройств
+        private async Task<List<ComboBT>> PairedList()
+        {
+            List<ComboBT> bTs = new List<ComboBT>();
+            DeviceInformationCollection PairedBluetoothDevices =
+            await DeviceInformation.FindAllAsync(BluetoothLEDevice.GetDeviceSelector());
+
+            foreach (DeviceInformation device in PairedBluetoothDevices)
+                bTs.Add(new ComboBT(device.Name, device.Id));
+
+            return await Task.Factory.StartNew(() =>
+            {
+                return bTs;
+            });
+        }
+
+        private void BTcombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (BTcombo.SelectedValue != null)
+            {
+                KompasCeilingMini.Properties.Settings.Default.BlueAddres = BTcombo.SelectedValue.ToString();
+                KompasCeilingMini.Properties.Settings.Default.Save();
+            }
+        }
+
+        private void DimUpBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePositionItem(true);
+        }
+
+        private void DimDnBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ChangePositionItem(false);
+        }
+
+        private void ConstraitLineToPointBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsAppl.Doc.ST.ObjectsToObjectDim();
+        }
+
+        private void SplitLineBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (KmpsAppl.Doc.ST != null)
+            {
+                KmpsAppl.someFlag = false;
+                KmpsAppl.Doc.ST.SplitLine((double)SplitLineUpDn.Value, (bool)DellBaseDimChek.IsChecked);
+                KmpsAppl.someFlag = true;
+            }
         }
 
         private void ToPointBtn_Click(object sender, RoutedEventArgs e)
         {
-            api.Doc.ST.LineToPoint();
+            KmpsAppl.Doc.ST.ConnectLineToLine();
+        }
+
+        private void XInvertBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsAppl.Doc.ST.InvertPointCoord(true, KompasCeilingMini.Properties.Settings.Default.stg_text_size);
+        }
+
+        private void YInvertBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsAppl.Doc.ST.InvertPointCoord(false, KompasCeilingMini.Properties.Settings.Default.stg_text_size);
+        }
+
+        private async void FixDimBtn_Click(object sender, RoutedEventArgs e)
+        {
+           await KmpsAppl.Doc.ST.SetVariableToDim(false, ksDimensionTextBracketsEnum.ksDimSquareBrackets);
+        }
+
+        private async void UnfixDimBtn_Click(object sender, RoutedEventArgs e)
+        {
+           await KmpsAppl.Doc.ST.SetVariableToDim(true, ksDimensionTextBracketsEnum.ksDimBrackets);
+        }
+
+        private async void VariableDimBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await KmpsAppl.Doc.ST.SetVariableToDim(false, ksDimensionTextBracketsEnum.ksDimBracketsOff);
+        }
+        #endregion
+
+
+        #region setting
+        private void KmpsCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.Save();
+        }
+
+
+        private void NameSetting_Click(object sender, RoutedEventArgs e)
+        {
+            if (KmpsAppl.KompasAPI != null)
+            {
+                EditPanel.NameEditForm nameEdit = new EditPanel.NameEditForm(KmpsAppl.Doc., CeilingItems);
+                nameEdit.Show();
+            }
+        }
+
+        private void HeadSetting_Click(object sender, RoutedEventArgs e)
+        {
+            if (KmpsAppl.KompasAPI != null)
+            {
+                EditPanel.HeadEditForm headEdit = new EditPanel.HeadEditForm(KmpsAppl.Doc., CeilingItems);
+                headEdit.Show();
+            }
+        }
+
+
+        private void JpgCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.Save();
+        }
+
+        #endregion
+
+        private void HamburgerButton_Click(object sender, RoutedEventArgs e)
+        {
+            MenuDoc.Width = 150;
+        }
+
+        private void MenuButton2_Click(object sender, RoutedEventArgs e)
+        {
+            DimPanel.Visibility = Visibility.Collapsed;
+            CalculatPanel.Visibility = Visibility.Visible;
+            SettingPanel.Visibility = Visibility.Visible;
+        }
+
+        private void MenuButton1_Click(object sender, RoutedEventArgs e)
+        {
+            DimPanel.Visibility = Visibility.Visible;
+            CalculatPanel.Visibility = Visibility.Visible;
+            SettingPanel.Visibility = Visibility.Visible;
+        }
+
+        private void MenuButton3_Click(object sender, RoutedEventArgs e)
+        {
+            DimPanel.Visibility = Visibility.Collapsed;
+            CalculatPanel.Visibility = Visibility.Collapsed;
+            SettingPanel.Visibility = Visibility.Visible;
+        }
+
+        private void CloseMainBtn_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void DockPanel_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            this.DragMove();
+        }
+
+        private void SizeCheks_Click(object sender, RoutedEventArgs e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.stg_size_auto = (bool)SizeCheks.IsChecked;
+        }
+
+        private void ObtuseAngleBtn_Click(object sender, RoutedEventArgs e)
+        {
+            SizeTool.ObtuseAngle();
+        }
+
+        private void PerimetrBox_ToolTipOpening(object sender, ToolTipEventArgs e)
+        {
+            PLineBlock.Text = "Прямые: " + KVariable.Sum("LineP", CeilingItems);
+            PCurveBlock.Text = "Кривые: " + KVariable.Sum("CurveP", CeilingItems);
+        }
+
+        private void SetDimBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsAppl.Doc.ST.UpdateOrMakeLine(double.Parse(DimVariableBox.Text.Replace('.', ',')), (bool)AddingLineToggle.IsChecked, true, KmpsAppl.Doc.GiveSelectOrChooseObj());
+        }
+
+        private void CloseDocUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.stg_closelast_val = (int)CloseDocUpDn.Value;
+        }
+
+        private void SizeText_ValueChanged_1(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.stg_text_size = (int)SizeText.Value;
+        }
+
+        private void DopuskUpDN_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.stg_dopuskUsadka = (int)DopuskUpDN.Value;
+        }
+
+        private void DistanceUPDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            KompasCeilingMini.Properties.Settings.Default.stg_crd_dopusk = (int)DistanceUPDn.Value;
+        }
+
+        private void SizeVariant_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (KompasCeilingMini.Properties.Settings.Default.stg_compensation_index != SizeVariant.SelectedIndex)
+            {
+                KompasCeilingMini.Properties.Settings.Default.stg_compensation_index = SizeVariant.SelectedIndex;
+                KompasCeilingMini.Properties.Settings.Default.stg_compensation_val = int.Parse(((ComboBoxItem)SizeVariant.SelectedItem).Content.ToString());
+                Comp = KompasCeilingMini.Properties.Settings.Default.stg_compensation_val;
+                KompasCeilingMini.Properties.Settings.Default.Save();
+            }
+
+        }
+
+        private void SizeVariant_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            SizeVariant.SelectedIndex = KompasCeilingMini.Properties.Settings.Default.stg_compensation_index;
+        }
+
+        private async void XUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            if (MainWindow.API != null)
+            {
+                await KVariable.UpdateAsync("koefX", XUpDn.Value.Value, string.Empty);
+                WidthUpDn.Value = Math.Round(KVariable.Give("XGabarit", facturaListCheck.SelectedItem.ToString()) * (100 - XUpDn.Value.Value) / 100, 2);
+            }
+        }
+
+        private async void YUpDn_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            if (MainWindow.API != null)
+            {
+                await KVariable.UpdateAsync("koefY", YUpDn.Value.Value, string.Empty);
+                HeightUpDn.Value = Math.Round(KVariable.Give("YGabarit", facturaListCheck.SelectedItem.ToString()) * (100 - YUpDn.Value.Value) / 100, 2);
+            }
+        }
+
+        private void MinimezeMainBtn_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void LockBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsDoc.LockedLayerAsync(88, true, true);
+        }
+
+        private void DellObjBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsAppl.Doc.DeleteSelectObj();
+        }
+
+        private void MoveViewBtn_Click(object sender, RoutedEventArgs e)
+        {
+            KmpsAppl.ZoomAll();
+        }
+
+        private void LockFrameBtn_Click(object sender, RoutedEventArgs e)
+        {
+            CheckResize(true);
+        }
+        private void CheckResize(bool invert = false)
+        {
+            if (invert) KompasCeilingMini.Properties.Settings.Default.head_resize = !KompasCeilingMini.Properties.Settings.Default.head_resize;
+            if (KompasCeilingMini.Properties.Settings.Default.head_resize)
+            {
+                LockFrameBtn.Content = "&#xE785;";
+                LockFrameBtn.Foreground = Brushes.Black;
+                MainFrame.ResizeMode = ResizeMode.CanResize;
+                KompasCeilingMini.Properties.Settings.Default.head_resize = true;
+            }
+            else
+            {
+                LockFrameBtn.Content = "&#xE72E;";
+                LockFrameBtn.Foreground = Brushes.White;
+                MainFrame.ResizeMode = ResizeMode.NoResize;
+                KompasCeilingMini.Properties.Settings.Default.head_resize = false;
+            }
+
+            KompasCeilingMini.Properties.Settings.Default.Save();
+        }
+
+        private void ZoomOut_Click(object sender, RoutedEventArgs e)
+        {
+            IDocumentFrame documentFrame = (IDocumentFrame)KmpsAppl.Appl.ActiveDocument.DocumentFrames[0];
+            documentFrame.ZoomPrevNextOrAll(ZoomTypeEnum.ksZoomNext);
+        }
+
+        private void ZoomIn_Click(object sender, RoutedEventArgs e)
+        {
+            IDocumentFrame documentFrame = (IDocumentFrame)KmpsAppl.Appl.ActiveDocument.DocumentFrames[0];
+            documentFrame.ZoomPrevNextOrAll(ZoomTypeEnum.ksZoomPrevious);
         }
     }
 

@@ -16,6 +16,8 @@ namespace KompasCeilingMini.EditPanel
     {
         private KmpsDoc tempDoc;
         private ItemCollection ic;
+
+
         public HeadEditForm(KmpsDoc TempDoc, ItemCollection IC)
         {
             InitializeComponent();
@@ -23,28 +25,13 @@ namespace KompasCeilingMini.EditPanel
             this.ic = IC;
 
 
-            DataSet ds = comboDataSet("SELECT Name, InText FROM dbo.Variable WHERE Visible='True'", "Variable");
+            DataSet ds = MainWindow.DefDataSet;
+
 
             VariableList.DisplayMemberPath = "Name";
             VariableList.SelectedValuePath = "InText";
             VariableList.ItemsSource = ds.Tables["Variable"].DefaultView;
-            
-            DataSet comboDataSet(string sqlCmd, string TableName)
-            {
-                ds = new DataSet();
 
-                string sqlCon = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\DefaultValue.mdf;Integrated Security=True";
-
-                using (SqlConnection sqlConnection = new SqlConnection(sqlCon))
-                {
-                    SqlDataAdapter da = new SqlDataAdapter(sqlCmd, sqlConnection);
-                    sqlConnection.Open();
-                    da.Fill(ds, TableName);
-
-                    sqlConnection.Close();
-                }
-                return ds;
-            }
         }
 
         private void VariableList_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -89,12 +76,12 @@ namespace KompasCeilingMini.EditPanel
 
         private void textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if ((bool)refreshChek.IsChecked) ExampleLabel.Content = tempDoc.GiveMeText(textBox.Text, ic, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+            if ((bool)refreshChek.IsChecked) ExampleLabel.Content = tempDoc.GiveMeText(textBox.Text, ic, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
         }
 
         private void refreshBtn_Click(object sender, RoutedEventArgs e)
         {
-            ExampleLabel.Content = tempDoc.GiveMeText(textBox.Text, ic, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+            ExampleLabel.Content = tempDoc.GiveMeText(textBox.Text, ic, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
         }
     }
 }

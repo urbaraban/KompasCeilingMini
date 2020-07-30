@@ -2,13 +2,10 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="KompasCeilingMini.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="WorkFolder" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="psX" Type="System.Int32" Scope="User">
+    <Setting Name="position_x" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="psY" Type="System.Int32" Scope="User">
+    <Setting Name="position_y" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="ZkzLastNumber" Type="System.Int32" Scope="User">
@@ -20,38 +17,71 @@
     <Setting Name="lastDate" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="SetSize" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+    <Setting Name="stg_text_size" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="EasyCeilingConnectionString" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\DefaultValue.mdf;Integrated Security=True</Value>
+      <Value Profile="(Default)">Data Source=(localdb)\MSSQLLocalDB; Integrated Security=true; AttachDbFilename=|DataDirectory|\DefaultValue.mdf</Value>
     </Setting>
-    <Setting Name="CloseLast" Type="System.Boolean" Scope="User">
+    <Setting Name="stg_closelast_check" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="CloseLastVal" Type="System.Int32" Scope="User">
+    <Setting Name="stg_closelast_val" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="frwCheck" Type="System.Boolean" Scope="User">
+    <Setting Name="stg_frw_check" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="jpgCheck" Type="System.Boolean" Scope="User">
+    <Setting Name="stg_jpg_check" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="crmCheck" Type="System.Boolean" Scope="User">
+    <Setting Name="stg_crm_check" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="HeadText" Type="System.String" Scope="User">
-      <Value Profile="(Default)">{Date} {Time}</Value>
+      <Value Profile="(Default)">{Date} {Time}
+
+Заказ №{Number} {Suffix}
+{Comment1}
+
+&lt;loop&gt;{factura} ({color}) &lt;b&gt;пог.={lenth}&lt;/b&gt;&lt;/loop&gt;
+S={Sqare} P={Perimetr} Вырез={cut}</Value>
     </Setting>
     <Setting Name="NameFileText" Type="System.String" Scope="User">
-      <Value Profile="(Default)">{Number} {Suffix}</Value>
+      <Value Profile="(Default)">{Number} S({Sqare}) {Comment1}</Value>
     </Setting>
-    <Setting Name="sufix" Type="System.String" Scope="User">
+    <Setting Name="variable_suffix" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="CoordDopusk" Type="System.Double" Scope="User">
+    <Setting Name="stg_crd_dopusk" Type="System.Double" Scope="User">
       <Value Profile="(Default)">50</Value>
+    </Setting>
+    <Setting Name="stg_text_auto" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="BlueAddres" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="stg_work_folders" Type="System.String" Scope="User">
+      <Value Profile="(Default)">temp</Value>
+    </Setting>
+    <Setting Name="stg_end_folder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="stg_size_auto" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="stg_dopuskUsadka" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="stg_compensation_val" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="stg_compensation_index" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="head_resize" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

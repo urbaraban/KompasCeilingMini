@@ -9,9 +9,6 @@
         Title="NameEditForm" Height="240.647" Width="832.374">
     <Grid>
         <TextBox x:Name="textBox" Height="43" Margin="10,10,10,0" TextWrapping="Wrap" Text="{Binding NameFileText}" VerticalAlignment="Top" FontSize="16" Drop="TextBox_Drop" DragEnter="TextBox_DragEnter" TextChanged="textBox_TextChanged">
-            <TextBox.DataContext>
-                <Properties:Settings/>
-            </TextBox.DataContext>
         </TextBox>
         <ListView x:Name="MyList" Margin="10,66,10,50" ScrollViewer.HorizontalScrollBarVisibility="Disabled" PreviewMouseDown="MyList_PreviewMouseDown">
             <ListView.ItemsPanel>

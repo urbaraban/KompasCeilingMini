@@ -22,13 +22,13 @@ namespace KompasCeilingMini.EditPanel
             this.tempDoc = TempDoc;
             this.ic = IC;
 
-            DataSet ds = comboDataSet("SELECT Name, InText FROM dbo.Variable WHERE Visible='True'", "Variable");
+            DataSet ds = MainWindow.DefDataSet;
             
             MyList.DisplayMemberPath = "Name";
             MyList.SelectedValuePath = "InText";
             MyList.ItemsSource = ds.Tables["Variable"].DefaultView;
         }
-
+        /*
         private DataSet comboDataSet(string sqlCmd, string TableName)
         {
             DataSet ds = new DataSet();
@@ -44,7 +44,7 @@ namespace KompasCeilingMini.EditPanel
                 sqlConnection.Close();
             }
             return ds;
-        }
+        }*/
 
         private void MyList_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -88,7 +88,7 @@ namespace KompasCeilingMini.EditPanel
 
         private void textBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ExampleLabel.Content = tempDoc.GiveMeText(textBox.Text, ic, KompasCeilingMini.Properties.Settings.Default.sufix, string.Empty);
+            ExampleLabel.Content = tempDoc.GiveMeText(textBox.Text, ic, KompasCeilingMini.Properties.Settings.Default.variable_suffix, string.Empty);
         }
     }
 }
